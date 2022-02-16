@@ -7,4 +7,5 @@
 :zap:You can check your position and order status at a glance.　  
 :zap:You can enter the expected quantity with a single click.  
 :zap:You can place an order by offsetting the expected price range from the best price.  
+:zap:You can save your particular settings for each currency.  
 :revolving_hearts:In addition, it will display important information for traders.
