@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  app:
+    container_name: vue-app-container
+    build: .
+    working_dir: /app
+    ports:
+      - 8080:8080
+    volumes:
+      - .:/app
+    stdin_open: true
