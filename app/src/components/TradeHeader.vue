@@ -1,7 +1,9 @@
 <template>
   <div>
     <select>
-      <option v-for="currencyPair in currencyPairs" :key="currencyPair.code">{{ currencyPair.name }}</option>
+      <option v-for="currencyPair in currencyPairs" :key="currencyPair.code">
+        {{ currencyPair.name }}
+      </option>
     </select>
     <p>Last Price:</p>
     <p>{{ price }}</p>
