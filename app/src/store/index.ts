@@ -14,6 +14,7 @@ export default createStore<RootState>({
     host: "https://api.dydx.exchange",
     ethAddress: "",
     client: undefined,
+    account: undefined,
   },
   getters: {
     ethAddress: (state) => {
@@ -22,6 +23,9 @@ export default createStore<RootState>({
     client: (state) => {
       return state.client;
     },
+    account: (state) => {
+      return state.account;
+    },
   },
   mutations: {
     SET_ETH_ADDRESS(state, ethAddress) {
@@ -29,6 +33,9 @@ export default createStore<RootState>({
     },
     SET_CLIENT(state, client) {
       state.client = client;
+    },
+    SET_ACCOUNT(state, account) {
+      state.account = account;
     },
   },
   actions: {
@@ -40,7 +47,7 @@ export default createStore<RootState>({
         const web3 = new Web3(window.ethereum);
 
         // eth address set
-        const accounts = await web3.eth.getAccounts();
+        const addressList = await web3.eth.getAccounts();
 
         // dydx client set
         // TODO @ts-ignore because the dependent web3 library for v3-client is out of date
@@ -52,12 +59,12 @@ export default createStore<RootState>({
         // signature & api key set
         try {
           const starkPrivateKey = await clientByWeb3.onboarding.deriveStarkKey(
-            accounts[0],
+            addressList[0],
             SigningMethod.MetaMask
           );
           const apiKeyCredentials =
             await clientByWeb3.onboarding.recoverDefaultApiCredentials(
-              accounts[0],
+              addressList[0],
               SigningMethod.MetaMask
             );
 
@@ -67,8 +74,13 @@ export default createStore<RootState>({
             starkPrivateKey,
           });
 
-          commit("SET_ETH_ADDRESS", accounts[0]);
+          const { account } = await clientByApiKey.private.getAccount(
+            addressList[0]
+          );
+
+          commit("SET_ETH_ADDRESS", addressList[0]);
           commit("SET_CLIENT", clientByApiKey);
+          commit("SET_ACCOUNT", account);
         } catch (error) {
           console.log(error);
         }
