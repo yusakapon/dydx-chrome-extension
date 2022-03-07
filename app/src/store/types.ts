@@ -3,17 +3,23 @@ import {
   AccountResponseObject,
   OrderSide,
   Market,
+  MarketResponseObject,
 } from "@dydxprotocol/v3-client";
-import {
-  DydxOrderBook,
-  ORDER_BOOK_VALUE as DYDX_BOOK_VALUE,
-} from "@/store/lib/ws/orderbook";
+import { DydxOrderBook } from "@/store/lib/ws/orderbook";
 
 export interface RootState {
   host: string;
   ethAddress: string;
   client?: DydxClient;
   account?: AccountResponseObject;
+}
+
+export interface MarketsState {
+  marketInfo?: MarketResponseObject;
+}
+
+export interface initMarketParam {
+  market: Market;
 }
 
 export interface OrderState {}

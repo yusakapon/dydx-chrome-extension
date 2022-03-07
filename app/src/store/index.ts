@@ -1,7 +1,8 @@
 import { createStore } from "vuex";
 import Web3 from "web3";
-import { DydxClient, SigningMethod } from "@dydxprotocol/v3-client";
-import { RootState } from "@/store/types";
+import { DydxClient, Market, SigningMethod } from "@dydxprotocol/v3-client";
+import { RootState, initMarketParam } from "@/store/types";
+import { MarketsStoreModule } from "@/store/modules/market";
 import { OrderbookStoreModule } from "@/store/modules/orderbook";
 
 declare global {
@@ -87,8 +88,16 @@ export default createStore<RootState>({
         }
       }
     },
+    async initMarket({ commit, dispatch, state }, { market }: initMarketParam) {
+      console.log("initMarket");
+      if (!state.client) return;
+
+      dispatch("market/init", { market: market });
+      dispatch("orderbook/init", { market: market });
+    },
   },
   modules: {
+    market: MarketsStoreModule,
     orderbook: OrderbookStoreModule,
   },
 });
