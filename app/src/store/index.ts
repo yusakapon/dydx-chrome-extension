@@ -3,6 +3,7 @@ import Web3 from "web3";
 import { DydxClient, Market, SigningMethod } from "@dydxprotocol/v3-client";
 import { RootState, initMarketParam } from "@/store/types";
 import { MarketsStoreModule } from "@/store/modules/market";
+import { OrderStoreModule } from "@/store/modules/order";
 import { OrderbookStoreModule } from "@/store/modules/orderbook";
 
 declare global {
@@ -98,6 +99,7 @@ export default createStore<RootState>({
   },
   modules: {
     market: MarketsStoreModule,
+    order: OrderStoreModule,
     orderbook: OrderbookStoreModule,
   },
 });

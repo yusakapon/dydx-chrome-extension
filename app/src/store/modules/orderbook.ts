@@ -1,5 +1,5 @@
 import { Module } from "vuex";
-import { RootState, OrderbookState, initOrderbookParam } from "@/store/types";
+import { RootState, OrderbookState, initMarketParam } from "@/store/types";
 import {
   DydxOrderBook,
   ORDER_BOOK_VALUE as DYDX_BOOK_VALUE,
@@ -47,7 +47,7 @@ export const OrderbookStoreModule: Module<OrderbookState, RootState> = {
     },
   },
   actions: {
-    async init({ commit, rootState }, { market }: initOrderbookParam) {
+    async init({ commit, rootState }, { market }: initMarketParam) {
       console.log("orderbook init");
       if (!rootState.client) return;
       const dydxOrderBook = new DydxOrderBook(

@@ -35,9 +35,5 @@ export interface OrderbookState {
 export interface MarketOrderParam {
   market: Market;
   side: OrderSide;
-  size: string;
-}
-
-export interface initOrderbookParam {
-  market: Market;
+  size: number;
 }
