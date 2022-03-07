@@ -2,6 +2,7 @@ import { createStore } from "vuex";
 import Web3 from "web3";
 import { DydxClient, SigningMethod } from "@dydxprotocol/v3-client";
 import { RootState } from "@/store/types";
+import { OrderbookStoreModule } from "@/store/modules/orderbook";
 
 declare global {
   interface Window {
@@ -87,5 +88,7 @@ export default createStore<RootState>({
       }
     },
   },
-  modules: {},
+  modules: {
+    orderbook: OrderbookStoreModule,
+  },
 });
