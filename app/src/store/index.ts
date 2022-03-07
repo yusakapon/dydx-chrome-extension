@@ -1,6 +1,7 @@
 import { createStore } from "vuex";
 import Web3 from "web3";
 import { DydxClient, SigningMethod } from "@dydxprotocol/v3-client";
+import { RootState } from "@/store/types";
 
 declare global {
   interface Window {
@@ -8,13 +9,7 @@ declare global {
   }
 }
 
-export interface State {
-  host: string;
-  ethAddress: string;
-  client?: DydxClient;
-}
-
-export default createStore<State>({
+export default createStore<RootState>({
   state: {
     host: "https://api.dydx.exchange",
     ethAddress: "",
