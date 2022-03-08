@@ -48,3 +48,11 @@ export interface LimitOrderParam {
   timeInForce: TimeInForce;
   expireSecond: number;
 }
+
+export interface CancelAllParam {
+  market?: Market;
+}
+
+export interface CancelParam {
+  orderId: string;
+}

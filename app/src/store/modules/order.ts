@@ -5,6 +5,8 @@ import {
   OrderState,
   MarketOrderParam,
   LimitOrderParam,
+  CancelAllParam,
+  CancelParam,
 } from "@/store/types";
 
 export const OrderStoreModule: Module<OrderState, RootState> = {
@@ -99,6 +101,27 @@ export const OrderStoreModule: Module<OrderState, RootState> = {
         param,
         rootState.account.positionId
       );
+      console.log(res);
+    },
+
+    async cancelAll({ commit, rootState }, { market }: CancelAllParam) {
+      console.log("cancelAll");
+      if (!rootState.client || !rootState.account) return;
+
+      if (market) {
+        const res = await rootState.client.private.cancelAllOrders(market);
+        console.log(res);
+      } else {
+        const res = await rootState.client.private.cancelAllOrders();
+        console.log(res);
+      }
+    },
+
+    async cancel({ commit, rootState }, { orderId }: CancelParam) {
+      console.log("cancel");
+      if (!rootState.client || !rootState.account) return;
+
+      const res = await rootState.client.private.cancelOrder(orderId);
       console.log(res);
     },
   },
