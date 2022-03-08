@@ -1,6 +1,11 @@
 import { Module } from "vuex";
 import { OrderSide, OrderType, TimeInForce } from "@dydxprotocol/v3-client";
-import { RootState, OrderState, MarketOrderParam } from "@/store/types";
+import {
+  RootState,
+  OrderState,
+  MarketOrderParam,
+  LimitOrderParam,
+} from "@/store/types";
 
 export const OrderStoreModule: Module<OrderState, RootState> = {
   namespaced: true,
@@ -44,6 +49,51 @@ export const OrderStoreModule: Module<OrderState, RootState> = {
         postOnly: false, // dummy param
         limitFee: "0.05", // dummy param
         expiration: new Date(Date.now() + 600000).toISOString(), // dummy param
+      };
+      const res = await rootState.client.private.createOrder(
+        param,
+        rootState.account.positionId
+      );
+      console.log(res);
+    },
+
+    async limitOrder(
+      { commit, rootState, rootGetters },
+      {
+        market,
+        side,
+        size,
+        price,
+        postOnly,
+        timeInForce,
+        expireSecond,
+      }: LimitOrderParam
+    ) {
+      console.log("limitOrder");
+      if (!rootState.client || !rootState.account) return;
+      if (
+        !rootGetters["orderbook/isConnected"] ||
+        !rootGetters["market/marketInfo"]
+      )
+        return;
+      if (size < rootGetters["market/minOrderSize"]) return;
+
+      const priceDicimalPoint: number = rootGetters["market/priceDicimalPoint"];
+      const orderPrice = price.toFixed(priceDicimalPoint);
+
+      const stepSize: number = rootGetters["market/stepSize"];
+      const orderSize = String(Math.trunc(size / stepSize) * stepSize);
+
+      const param = {
+        type: OrderType.LIMIT,
+        market: market,
+        side: side,
+        size: orderSize,
+        price: orderPrice,
+        postOnly: postOnly,
+        timeInForce: timeInForce,
+        limitFee: "0.05",
+        expiration: new Date(Date.now() + expireSecond * 1000).toISOString(),
       };
       const res = await rootState.client.private.createOrder(
         param,
