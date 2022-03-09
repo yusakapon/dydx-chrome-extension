@@ -1,3 +1,5 @@
+<script setup lang="ts"></script>
+
 <template>
   <details>
     <summary>
@@ -7,17 +9,6 @@
     <div>Order</div>
   </details>
 </template>
-
-<script lang="ts">
-export default {
-  name: "TradeInfo",
-  data() {
-    return {
-      eid: 0,
-    };
-  },
-};
-</script>
 
 <style scoped>
 summary {
