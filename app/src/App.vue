@@ -20,8 +20,6 @@ const dragStartY = ref<number>(0);
 const startClientRect = reactive({
   x: 0 as number,
   y: 0 as number,
-  width: 0 as number,
-  height: 0 as number,
 });
 
 const isMinimized = ref<boolean>(false);
@@ -45,15 +43,13 @@ const onMoveDragStart = (event: Event) => {
   dragStartY.value = event.clientY;
   startClientRect.x = pos.x;
   startClientRect.y = pos.y;
-  startClientRect.width = width.value;
-  startClientRect.height = height.value;
 };
 
 const onDrag = (event: Event) => {
   // 移動ドラッグの時
   if (isMoveDragging.value) {
-    pos.x = event.clientX;
-    pos.y = event.clientY;
+    pos.x = startClientRect.x + (event.clientX - dragStartX.value);
+    pos.y = startClientRect.y + (event.clientY - dragStartY.value);
   }
 };
 
@@ -63,18 +59,6 @@ const onDragEnd = () => {
   dragStartY.value = 0;
   startClientRect.x = 0;
   startClientRect.y = 0;
-  startClientRect.width = 0;
-  startClientRect.height = 0;
-};
-
-const minimizeModal = () => {
-  isMinimized.value = true;
-  height.value = 30;
-};
-
-const maximizeModal = () => {
-  isMinimized.value = false;
-  height.value = 800;
 };
 </script>
 
@@ -87,32 +71,50 @@ const maximizeModal = () => {
       height: `${height}px`,
       transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
       border: '1px solid #FFF',
+      borderRadius: '5px',
     }"
   >
-    <div class="modal-container">
-      <div
-        class="modal-header"
-        :style="{
-          height: `30px`,
-        }"
-      >
-        <span
-          class="header-title"
-          @mousedown="onMoveDragStart"
-          :style="{ cursor: 'grab' }"
-          >draggable</span
-        >
-        <fa icon="window-minimize" @click="minimizeModal" />
-        <fa icon="window-maximize" @click="maximizeModal" />
-      </div>
+    <div
+      class="modal-header"
+      :style="{
+        height: `40px`,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderBottom: '1px solid #FFF',
+        fontWeight: 'bold',
+      }"
+      @mousedown="onMoveDragStart"
+    >
+      <span>dYdX Trade Support Extension</span>
     </div>
     <div class="modal-content" v-show="!isMinimized">
-      <TradeHeader />
-      <TradeInfo />
-      <MarketOrder />
-      <LimitOrder />
+      <div
+        :style="{
+          borderBottom: '1px solid #FFF',
+        }"
+      >
+        <TradeHeader />
+      </div>
+      <div
+        :style="{
+          borderBottom: '1px solid #FFF',
+        }"
+      >
+        <TradeInfo />
+      </div>
+      <div
+        :style="{
+          borderBottom: '1px solid #FFF',
+        }"
+      >
+        <MarketOrder />
+      </div>
+      <div>
+        <LimitOrder />
+      </div>
     </div>
   </div>
 </template>
 
-<style scoped></style>
+<style></style>
