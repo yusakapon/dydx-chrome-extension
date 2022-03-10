@@ -4,6 +4,7 @@ import {
   OrderSide,
   Market,
   MarketResponseObject,
+  TimeInForce,
 } from "@dydxprotocol/v3-client";
 import { DydxOrderBook } from "@/store/lib/ws/orderbook";
 
@@ -36,4 +37,22 @@ export interface MarketOrderParam {
   market: Market;
   side: OrderSide;
   size: number;
+}
+
+export interface LimitOrderParam {
+  market: Market;
+  side: OrderSide;
+  size: number;
+  price: number;
+  postOnly: boolean;
+  timeInForce: TimeInForce;
+  expireSecond: number;
+}
+
+export interface CancelAllParam {
+  market?: Market;
+}
+
+export interface CancelParam {
+  orderId: string;
 }
