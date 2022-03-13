@@ -9,12 +9,13 @@
         "https://trade.dydx.exchange/trade/*",
         "https://trade.stage.dydx.exchange/trade/*"
       ],
-      "js": ["loader.js"]
+      "js": ["loader.js"],
+      "css": ["css/app.css"]
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["js/chunk-vendors.js", "js/app.js"],
+      "resources": ["js/chunk-vendors.js", "js/app.js", "css/app.css"],
       "matches": ["<all_urls>"]
     }
   ]
