@@ -5,15 +5,11 @@ import MarketOrder from "./components/MarketOrder.vue";
 import TradeHeader from "./components/TradeHeader.vue";
 import TradeInfo from "./components/TradeInfo.vue";
 
-const initialWidth = 300;
-const initialHeight = 800;
-const width = ref<number>(initialWidth);
-const height = ref<number>(initialHeight);
+const isMoveDragging = ref<boolean>(false);
 const pos = reactive({
   x: 0 as number,
   y: 0 as number,
 });
-const isMoveDragging = ref<boolean>(false);
 
 const dragStartX = ref<number>(0);
 const dragStartY = ref<number>(0);
@@ -21,8 +17,6 @@ const startClientRect = reactive({
   x: 0 as number,
   y: 0 as number,
 });
-
-const isMinimized = ref<boolean>(false);
 
 onMounted(() => {
   document.addEventListener("mousemove", onDrag);
@@ -46,7 +40,8 @@ const onMoveDragStart = (event: Event) => {
 };
 
 const onDrag = (event: Event) => {
-  // 移動ドラッグの時
+  console.log(event);
+
   if (isMoveDragging.value) {
     pos.x = startClientRect.x + (event.clientX - dragStartX.value);
     pos.y = startClientRect.y + (event.clientY - dragStartY.value);
@@ -64,50 +59,25 @@ const onDragEnd = () => {
 
 <template>
   <div
-    class="modal"
+    class="absolute bg-modal z-50 border border-solid border-white rounded-md h-auto w-modal"
     :style="{
-      background: '#1c1c28',
-      width: `${width}px`,
-      height: `${height}px`,
       transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
-      border: '1px solid #FFF',
-      borderRadius: '5px',
     }"
   >
     <div
-      class="modal-header"
-      :style="{
-        height: `40px`,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderBottom: '1px solid #FFF',
-        fontWeight: 'bold',
-      }"
+      class="h-12 text-center flex justify-center items-center border-b border-solid border-white cursor-move"
       @mousedown="onMoveDragStart"
     >
-      <span>dYdX Trade Support Extension</span>
+      <span class="text-lg font-bold">dYdX Trade Support Extension</span>
     </div>
-    <div class="modal-content" v-show="!isMinimized">
-      <div
-        :style="{
-          borderBottom: '1px solid #FFF',
-        }"
-      >
+    <div class="modal-content">
+      <div class="border-b border-solid border-white">
         <TradeHeader />
       </div>
-      <div
-        :style="{
-          borderBottom: '1px solid #FFF',
-        }"
-      >
+      <div class="border-b border-solid border-white">
         <TradeInfo />
       </div>
-      <div
-        :style="{
-          borderBottom: '1px solid #FFF',
-        }"
-      >
+      <div class="border-b border-solid border-white">
         <MarketOrder />
       </div>
       <div>
@@ -117,4 +87,12 @@ const onDragEnd = () => {
   </div>
 </template>
 
-<style></style>
+<style scoped>
+.bg-modal {
+  background-color: #1c1c28;
+}
+
+.w-modal {
+  width: 300px;
+}
+</style>

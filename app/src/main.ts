@@ -11,7 +11,7 @@ document
   ?.querySelector("body")
   ?.insertAdjacentHTML(
     `afterbegin`,
-    `<div id="trade-extension" style="position: absolute; z-index:9999; width: 300px; height: 800px;"></div>`
+    `<div id="trade-extension" class="z-40 absolute w-auto h-auto"></div>`
   );
 
 createApp(App)
