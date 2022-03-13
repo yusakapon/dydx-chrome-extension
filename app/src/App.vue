@@ -28,7 +28,7 @@ onBeforeMount(() => {
   document.removeEventListener("mouseup", onDragEnd);
 });
 
-const onMoveDragStart = (event: Event) => {
+const onMoveDragStart = (event: MouseEvent) => {
   event.preventDefault();
   event.stopPropagation();
 
@@ -39,7 +39,7 @@ const onMoveDragStart = (event: Event) => {
   startClientRect.y = pos.y;
 };
 
-const onDrag = (event: Event) => {
+const onDrag = (event: MouseEvent) => {
   if (isMoveDragging.value) {
     pos.x = startClientRect.x + (event.clientX - dragStartX.value);
     pos.y = startClientRect.y + (event.clientY - dragStartY.value);
