@@ -1,6 +1,5 @@
+import { WS_HOST } from "@/store/types";
 import { DydxClient, Market } from "@dydxprotocol/v3-client";
-
-const WS_HOST = "wss://api.dydx.exchange/v3/ws";
 
 export enum RequestMethod {
   POST = "POST",
@@ -20,6 +19,7 @@ class DydxOrderBook {
     bids: [size: number, size: number, updateTime: number][];
     asks: [size: number, size: number, updateTime: number][];
   };
+  host: WS_HOST;
   client: DydxClient;
   symbol: Market;
   updateCallback: () => void;
@@ -27,11 +27,13 @@ class DydxOrderBook {
   maxDepth: number;
 
   constructor(
+    host: WS_HOST,
     client: DydxClient,
     maxDepth: number,
     symbol: Market,
     updateCallback: () => void
   ) {
+    this.host = host;
     this.client = client;
     this.symbol = symbol;
     this.maxDepth = maxDepth;
@@ -202,7 +204,7 @@ class DydxOrderBook {
       includeOffsets: true,
     };
 
-    const ws = new WebSocket(WS_HOST);
+    const ws = new WebSocket(this.host);
 
     ws.onopen = () => {
       console.log("orderbook ws open");
