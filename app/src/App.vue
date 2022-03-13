@@ -40,8 +40,6 @@ const onMoveDragStart = (event: Event) => {
 };
 
 const onDrag = (event: Event) => {
-  console.log(event);
-
   if (isMoveDragging.value) {
     pos.x = startClientRect.x + (event.clientX - dragStartX.value);
     pos.y = startClientRect.y + (event.clientY - dragStartY.value);
