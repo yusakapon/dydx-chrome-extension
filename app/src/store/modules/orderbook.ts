@@ -51,6 +51,7 @@ export const OrderbookStoreModule: Module<OrderbookState, RootState> = {
       console.log("orderbook init");
       if (!rootState.client) return;
       const dydxOrderBook = new DydxOrderBook(
+        rootState.hostWs,
         rootState.client,
         1000,
         market,

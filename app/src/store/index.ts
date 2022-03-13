@@ -1,7 +1,13 @@
 import { createStore } from "vuex";
 import Web3 from "web3";
 import { DydxClient, Market, SigningMethod } from "@dydxprotocol/v3-client";
-import { RootState, initMarketParam } from "@/store/types";
+import {
+  RootState,
+  initMarketParam,
+  API_HOST,
+  WS_HOST,
+  NETWORK_ID,
+} from "@/store/types";
 import { MarketsStoreModule } from "@/store/modules/market";
 import { OrderStoreModule } from "@/store/modules/order";
 import { OrderbookStoreModule } from "@/store/modules/orderbook";
@@ -14,7 +20,8 @@ declare global {
 
 export default createStore<RootState>({
   state: {
-    host: "https://api.dydx.exchange",
+    host: API_HOST.PRODUCTION,
+    hostWs: WS_HOST.PRODUCTION,
     ethAddress: "",
     client: undefined,
     account: undefined,
@@ -31,6 +38,14 @@ export default createStore<RootState>({
     },
   },
   mutations: {
+    SET_HOST(state) {
+      state.host = location.host.includes("stage")
+        ? API_HOST.STAGING
+        : API_HOST.PRODUCTION;
+      state.hostWs = location.host.includes("stage")
+        ? WS_HOST.STAGING
+        : WS_HOST.PRODUCTION;
+    },
     SET_ETH_ADDRESS(state, ethAddress) {
       state.ethAddress = ethAddress;
     },
@@ -45,29 +60,48 @@ export default createStore<RootState>({
     async initClient({ commit, state }) {
       console.log("initClient");
 
+      commit("SET_HOST");
+
       if (window.ethereum) {
         await window.ethereum.enable();
-        const web3 = new Web3(window.ethereum);
+        const ethereum = { ...window.ethereum };
+        const web3 = new Web3(ethereum);
 
         // eth address set
-        const addressList = await web3.eth.getAccounts();
+        const address = ethereum.selectedAddress;
+        const networkId = parseInt(ethereum.chainId, 16);
+
+        if (
+          state.host === API_HOST.PRODUCTION &&
+          networkId !== NETWORK_ID.PRODUCTION
+        ) {
+          console.error("Please select the ethereum mainnet in the metamask");
+          return;
+        } else if (
+          state.host === API_HOST.STAGING &&
+          networkId !== NETWORK_ID.STAGING
+        ) {
+          console.error("Please select the Ropsten testnet in the metamask");
+          return;
+        }
 
         // dydx client set
         // TODO @ts-ignore because the dependent web3 library for v3-client is out of date
         const clientByWeb3 = new DydxClient(state.host, {
           // @ts-ignore
           web3,
+          networkId,
         });
 
         // signature & api key set
         try {
           const starkPrivateKey = await clientByWeb3.onboarding.deriveStarkKey(
-            addressList[0],
+            address,
             SigningMethod.MetaMask
           );
           const apiKeyCredentials =
             await clientByWeb3.onboarding.recoverDefaultApiCredentials(
-              addressList[0],
+              address,
               SigningMethod.MetaMask
             );
 
@@ -75,13 +109,12 @@ export default createStore<RootState>({
           const clientByApiKey = new DydxClient(state.host, {
             apiKeyCredentials,
             starkPrivateKey,
+            networkId,
           });
 
-          const { account } = await clientByApiKey.private.getAccount(
-            addressList[0]
-          );
+          const { account } = await clientByApiKey.private.getAccount(address);
 
-          commit("SET_ETH_ADDRESS", addressList[0]);
+          commit("SET_ETH_ADDRESS", address);
           commit("SET_CLIENT", clientByApiKey);
           commit("SET_ACCOUNT", account);
         } catch (error) {

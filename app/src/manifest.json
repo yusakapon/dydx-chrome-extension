@@ -5,7 +5,10 @@
   "version": "1.0",
   "content_scripts": [
     {
-      "matches": ["https://trade.dydx.exchange/trade/*"],
+      "matches": [
+        "https://trade.dydx.exchange/trade/*",
+        "https://trade.stage.dydx.exchange/trade/*"
+      ],
       "js": ["loader.js"]
     }
   ],
