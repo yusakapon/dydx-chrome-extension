@@ -1,4 +1,5 @@
-import { createStore } from "vuex";
+import { InjectionKey } from "vue";
+import { createStore, useStore as baseUseStore, Store } from "vuex";
 import Web3 from "web3";
 import { DydxClient, Market, SigningMethod } from "@dydxprotocol/v3-client";
 import {
@@ -18,7 +19,9 @@ declare global {
   }
 }
 
-export default createStore<RootState>({
+export const key: InjectionKey<Store<RootState>> = Symbol();
+
+export const store = createStore<RootState>({
   state: {
     host: API_HOST.PRODUCTION,
     hostWs: WS_HOST.PRODUCTION,
@@ -136,3 +139,7 @@ export default createStore<RootState>({
     orderbook: OrderbookStoreModule,
   },
 });
+
+export function useStore() {
+  return baseUseStore(key);
+}
