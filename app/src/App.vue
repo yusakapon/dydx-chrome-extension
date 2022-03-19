@@ -86,10 +86,6 @@ const onDragEnd = () => {
 </template>
 
 <style scoped>
-.bg-modal {
-  background-color: #1c1c28;
-}
-
 .w-modal {
   width: 300px;
 }
