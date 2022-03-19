@@ -1,4 +1,5 @@
-import { createStore } from "vuex";
+import { InjectionKey } from "vue";
+import { createStore, useStore as baseUseStore, Store } from "vuex";
 import Web3 from "web3";
 import { DydxClient, Market, SigningMethod } from "@dydxprotocol/v3-client";
 import {
@@ -11,6 +12,7 @@ import {
 import { MarketsStoreModule } from "@/store/modules/market";
 import { OrderStoreModule } from "@/store/modules/order";
 import { OrderbookStoreModule } from "@/store/modules/orderbook";
+import { AccountStoreModule } from "./modules/account";
 
 declare global {
   interface Window {
@@ -18,7 +20,9 @@ declare global {
   }
 }
 
-export default createStore<RootState>({
+export const key: InjectionKey<Store<RootState>> = Symbol();
+
+export const store = createStore<RootState>({
   state: {
     host: API_HOST.PRODUCTION,
     hostWs: WS_HOST.PRODUCTION,
@@ -57,7 +61,7 @@ export default createStore<RootState>({
     },
   },
   actions: {
-    async initClient({ commit, state }) {
+    async initClient({ commit, dispatch, state }) {
       console.log("initClient");
 
       commit("SET_HOST");
@@ -117,6 +121,9 @@ export default createStore<RootState>({
           commit("SET_ETH_ADDRESS", address);
           commit("SET_CLIENT", clientByApiKey);
           commit("SET_ACCOUNT", account);
+
+          // order and position ws
+          dispatch("account/init");
         } catch (error) {
           console.log(error);
         }
@@ -134,5 +141,10 @@ export default createStore<RootState>({
     market: MarketsStoreModule,
     order: OrderStoreModule,
     orderbook: OrderbookStoreModule,
+    account: AccountStoreModule,
   },
 });
+
+export function useStore() {
+  return baseUseStore(key);
+}

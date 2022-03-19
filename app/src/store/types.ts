@@ -6,6 +6,7 @@ import {
   MarketResponseObject,
   TimeInForce,
 } from "@dydxprotocol/v3-client";
+import { Account } from "@/store/lib/ws/account";
 import { DydxOrderBook } from "@/store/lib/ws/orderbook";
 
 export enum API_HOST {
@@ -48,6 +49,13 @@ export interface OrderbookState {
   symbol?: Market;
   bestAskPrice?: number;
   bestBidPrice?: number;
+}
+
+export interface AccountState {
+  account?: Account;
+  orders: { [id: string]: any };
+  positions: { [id: string]: any };
+  isConnected: boolean;
 }
 
 export interface MarketOrderParam {
