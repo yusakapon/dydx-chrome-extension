@@ -8,19 +8,15 @@ const currencyPairs = ref([
 </script>
 
 <template>
-  <div>
-    <select>
+  <div class="flex p-2">
+    <select class="bg-modal-container py-1 px-2 mr-2 rounded">
       <option v-for="currencyPair in currencyPairs" :key="currencyPair.code">
         {{ currencyPair.name }}
       </option>
     </select>
-    <p>Last Price:</p>
-    <p>{{ price }}</p>
+    <div>
+      <p>Last Price:</p>
+      <p class="text-lg text-center">{{ price }}</p>
+    </div>
   </div>
 </template>
-
-<style scoped>
-select {
-  background-color: #000000;
-}
-</style>
