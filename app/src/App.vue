@@ -4,7 +4,9 @@ import LimitOrder from "./components/LimitOrder.vue";
 import MarketOrder from "./components/MarketOrder.vue";
 import TradeHeader from "./components/TradeHeader.vue";
 import TradeInfo from "./components/TradeInfo.vue";
+import ConnectWallet from "./components/ConnetWallet.vue";
 
+const isConnected = ref<boolean>(false);
 const isMoveDragging = ref<boolean>(false);
 const pos = reactive({
   x: 0 as number,
@@ -53,6 +55,10 @@ const onDragEnd = () => {
   startClientRect.x = 0;
   startClientRect.y = 0;
 };
+
+const connectStatus = (status: boolean) => {
+  isConnected.value = status;
+};
 </script>
 
 <template>
@@ -68,7 +74,7 @@ const onDragEnd = () => {
     >
       <span class="text-lg font-bold">dYdX Trade Support Extension</span>
     </div>
-    <div class="modal-content">
+    <div class="modal-content" v-if="isConnected">
       <div class="border-b border-solid border-white">
         <TradeHeader />
       </div>
@@ -81,6 +87,9 @@ const onDragEnd = () => {
       <div>
         <LimitOrder />
       </div>
+    </div>
+    <div class="authorize" v-else>
+      <ConnectWallet @is-connected="connectStatus" />
     </div>
   </div>
 </template>

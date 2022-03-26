@@ -4,6 +4,7 @@ import AppAccordion from "./parts/AppAccordion.vue";
 
 const amount = ref<number>(0);
 const step = ref<number>(0.01);
+
 const countDownAmount = () => {
   if (amount.value !== null) {
     amount.value =
@@ -21,6 +22,7 @@ const countUpAmount = () => {
     amount.value = step.value;
   }
 };
+
 const countArgAmount = (argStep: number) => {
   step.value = argStep;
   if (amount.value !== null) {
@@ -29,13 +31,15 @@ const countArgAmount = (argStep: number) => {
     amount.value = step.value;
   }
 };
+const clearAmount = () => {
+  amount.value = 0;
+};
+
 const setLeverageAmount = (leverage: number) => {
   console.log(leverage);
   // amount.value = 0;
 };
-const clearAmount = () => {
-  amount.value = 0;
-};
+
 const marketBuy = () => {
   console.log("market buy:" + amount.value);
   alert("market buy:" + amount.value);
@@ -56,37 +60,7 @@ const marketSell = () => {
         <div>
           <span class="text-sm">Amount</span>
         </div>
-        <div class="pt-1 pb-2 flex items-center">
-          <input
-            type="number"
-            min="0"
-            max="1000000"
-            :step="step"
-            class="w-64p px-2 py-2 bg-modal-container rounded"
-            v-model="amount"
-          />
-          <span class="absolute mr-28 right-0">
-            <button
-              class="bg-gray-700 mr-1 px-2 py-1 rounded"
-              @click="countDownAmount"
-            >
-              <fa icon="minus"></fa>
-            </button>
-            <button
-              class="bg-gray-700 px-2 py-1 rounded"
-              @click="countUpAmount"
-            >
-              <fa icon="plus"></fa>
-            </button>
-          </span>
-          <button
-            class="bg-modal-container w-3/12 ml-2 py-2 rounded"
-            @click="clearAmount"
-          >
-            Clear
-          </button>
-        </div>
-        <div class="inline-flex w-full flex">
+        <div class="inline-flex w-full flex my-1">
           <button
             class="bg-modal-container w-1/6 py-2 rounded-l"
             @click="countArgAmount(0.01)"
@@ -118,7 +92,37 @@ const marketSell = () => {
             2×
           </button>
         </div>
-        <div class="py-4 flex justify-between">
+        <div class="pt-1 pb-2 flex items-center">
+          <input
+            type="number"
+            min="0"
+            max="1000000"
+            :step="step"
+            class="w-64p px-2 py-2 bg-modal-container rounded"
+            v-model="amount"
+          />
+          <span class="absolute mr-28 right-0">
+            <button
+              class="bg-gray-700 mr-1 px-2 py-1 rounded"
+              @click="countDownAmount"
+            >
+              <fa icon="minus"></fa>
+            </button>
+            <button
+              class="bg-gray-700 px-2 py-1 rounded"
+              @click="countUpAmount"
+            >
+              <fa icon="plus"></fa>
+            </button>
+          </span>
+          <button
+            class="bg-modal-container w-3/12 ml-2 py-2 rounded"
+            @click="clearAmount"
+          >
+            Clear
+          </button>
+        </div>
+        <div class="pb-4 pt-2 flex justify-between">
           <button
             @click="marketSell"
             class="bg-modal-container font-semibold py-3 px-6 border border-sell text-sell rounded"
