@@ -29,6 +29,7 @@ export const store = createStore<RootState>({
     ethAddress: "",
     client: undefined,
     account: undefined,
+    errorMsg: "",
   },
   getters: {
     ethAddress: (state) => {
@@ -39,6 +40,9 @@ export const store = createStore<RootState>({
     },
     account: (state) => {
       return state.account;
+    },
+    errorMsg: (state) => {
+      return state.errorMsg;
     },
   },
   mutations: {
@@ -58,6 +62,9 @@ export const store = createStore<RootState>({
     },
     SET_ACCOUNT(state, account) {
       state.account = account;
+    },
+    SET_ERROR_MSG(state, msg) {
+      state.errorMsg = msg;
     },
   },
   actions: {
@@ -79,14 +86,22 @@ export const store = createStore<RootState>({
           state.host === API_HOST.PRODUCTION &&
           networkId !== NETWORK_ID.PRODUCTION
         ) {
-          console.error("Please select the ethereum mainnet in the metamask");
-          return;
+          console.error("Please select the ethereum mainnet in the MetaMask");
+          commit(
+            "SET_ERROR_MSG",
+            "Please select the ethereum mainnet in the MetaMask"
+          );
+          return false;
         } else if (
           state.host === API_HOST.STAGING &&
           networkId !== NETWORK_ID.STAGING
         ) {
-          console.error("Please select the Ropsten testnet in the metamask");
-          return;
+          console.error("Please select the Ropsten testnet in the MetaMask");
+          commit(
+            "SET_ERROR_MSG",
+            "Please select the Ropsten testnet in the MetaMask"
+          );
+          return false;
         }
 
         // dydx client set
@@ -126,15 +141,34 @@ export const store = createStore<RootState>({
           dispatch("account/init");
         } catch (error) {
           console.log(error);
+          commit("SET_ERROR_MSG", "Please install MetaMask");
+          return false;
         }
+      } else {
+        commit("SET_ERROR_MSG", "Authentication failed");
+        return false;
       }
+      return true;
     },
     async initMarket({ commit, dispatch, state }, { market }: initMarketParam) {
       console.log("initMarket");
-      if (!state.client) return;
+      if (!state.client) {
+        return false;
+      }
 
-      dispatch("market/init", { market: market });
-      dispatch("orderbook/init", { market: market });
+      const marketInit = dispatch("market/init", { market: market });
+      const orderbookInit = dispatch("orderbook/init", { market: market });
+      const [marketInitResult, orderbookInitResult] = await Promise.all([
+        marketInit,
+        orderbookInit,
+      ]);
+
+      if (marketInitResult && orderbookInitResult) {
+        return true;
+      } else {
+        commit("SET_ERROR_MSG", "Failed to initialize marketInfo");
+        return false;
+      }
     },
   },
   modules: {
