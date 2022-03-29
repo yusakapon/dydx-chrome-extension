@@ -49,19 +49,25 @@ export const OrderbookStoreModule: Module<OrderbookState, RootState> = {
   actions: {
     async init({ commit, rootState }, { market }: initMarketParam) {
       console.log("orderbook init");
-      if (!rootState.client) return;
-      const dydxOrderBook = new DydxOrderBook(
-        rootState.hostWs,
-        rootState.client,
-        1000,
-        market,
-        () => {
-          commit("UPDATE_ORDERBOOK");
-        }
-      );
-      await dydxOrderBook.start();
+      if (!rootState.client) return false;
 
-      commit("SET_DYDX_ORDERBOOK", dydxOrderBook);
+      try {
+        const dydxOrderBook = new DydxOrderBook(
+          rootState.hostWs,
+          rootState.client,
+          1000,
+          market,
+          () => {
+            commit("UPDATE_ORDERBOOK");
+          }
+        );
+        await dydxOrderBook.start();
+
+        commit("SET_DYDX_ORDERBOOK", dydxOrderBook);
+        return true;
+      } catch (error) {
+        return false;
+      }
     },
   },
   modules: {},

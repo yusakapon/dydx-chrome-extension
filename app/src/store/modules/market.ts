@@ -32,12 +32,16 @@ export const MarketsStoreModule: Module<MarketsState, RootState> = {
   actions: {
     async init({ commit, rootState }, { market }: initMarketParam) {
       console.log("markets init");
-      if (!rootState.client) return;
+      if (!rootState.client) return false;
 
-      const { markets } = await rootState.client.public.getMarkets(market);
-      console.log(markets[market]);
-
-      commit("SET_MARKETS", markets[market]);
+      try {
+        const { markets } = await rootState.client.public.getMarkets(market);
+        console.log(markets[market]);
+        commit("SET_MARKETS", markets[market]);
+        return true;
+      } catch (error) {
+        return false;
+      }
     },
   },
   modules: {},
