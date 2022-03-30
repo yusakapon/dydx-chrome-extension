@@ -1,14 +1,23 @@
 <script setup lang="ts">
 import { ref, defineEmits } from "vue";
 import { useStore } from "@/store";
+
 const store = useStore();
 const isConnected = ref<boolean>(false);
+const isError = ref<boolean>(false);
+const errorMsg = ref<string>("");
 
 const emit = defineEmits(["is-connected"]);
+
 const connectWallet = async () => {
-  await store.dispatch("initClient");
-  isConnected.value = true;
-  emit("is-connected", isConnected.value);
+  const connect = await store.dispatch("initClient");
+  if (connect === true) {
+    isConnected.value = true;
+    emit("is-connected", isConnected.value);
+  } else {
+    isError.value = true;
+    errorMsg.value = store.getters.errorMsg;
+  }
 };
 </script>
 
@@ -20,5 +29,9 @@ const connectWallet = async () => {
     >
       Connect wallet
     </button>
+  </div>
+  <div class="text-center pb-2 text-red-700" v-show="isError">
+    <fa icon="exclamation-triangle"></fa>
+    <span class="ml-1">{{ errorMsg }}</span>
   </div>
 </template>
