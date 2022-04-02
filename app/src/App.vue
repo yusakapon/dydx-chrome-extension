@@ -7,6 +7,7 @@ import TradeInfo from "./components/TradeInfo.vue";
 import ConnectWallet from "./components/ConnetWallet.vue";
 
 const isConnected = ref<boolean>(false);
+const currencyPairSelected = ref<string>();
 const isMoveDragging = ref<boolean>(false);
 const pos = reactive({
   x: 0 as number,
@@ -59,6 +60,10 @@ const onDragEnd = () => {
 const connectStatus = (status: boolean) => {
   isConnected.value = status;
 };
+
+const currencyPair = (pair: string) => {
+  currencyPairSelected.value = pair;
+};
 </script>
 
 <template>
@@ -76,13 +81,13 @@ const connectStatus = (status: boolean) => {
     </div>
     <div class="modal-content" v-if="isConnected">
       <div class="border-b border-solid border-white">
-        <TradeHeader />
+        <TradeHeader @currency-pair="currencyPair" />
       </div>
       <div class="border-b border-solid border-white">
         <TradeInfo />
       </div>
       <div class="border-b border-solid border-white">
-        <MarketOrder />
+        <MarketOrder :currency-pair="currencyPairSelected" />
       </div>
       <div>
         <LimitOrder />
