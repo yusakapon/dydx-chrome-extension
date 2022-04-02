@@ -23,12 +23,13 @@ export const OrderStoreModule: Module<OrderState, RootState> = {
       if (!rootState.client || !rootState.account) return;
       if (
         !rootGetters["orderbook/isConnected"] ||
-        !rootGetters["market/marketInfo"]
+        !rootGetters["market/marketInfo"](market)
       )
         return;
-      if (size < rootGetters["market/minOrderSize"]) return;
+      if (size < rootGetters["market/minOrderSize"](market)) return;
 
-      const priceDicimalPoint: number = rootGetters["market/priceDicimalPoint"];
+      const priceDicimalPoint: number =
+        rootGetters["market/priceDicimalPoint"](market);
       let orderPrice = "";
       if (side === OrderSide.BUY) {
         const bestPrice: number = rootGetters["orderbook/bestAskPrice"];
@@ -38,7 +39,7 @@ export const OrderStoreModule: Module<OrderState, RootState> = {
         orderPrice = (bestPrice - bestPrice * 0.1).toFixed(priceDicimalPoint);
       }
 
-      const stepSize: number = rootGetters["market/stepSize"];
+      const stepSize: number = rootGetters["market/stepSize"](market);
       const orderSize = String(Math.trunc(size / stepSize) * stepSize);
 
       const param = {
@@ -75,15 +76,16 @@ export const OrderStoreModule: Module<OrderState, RootState> = {
       if (!rootState.client || !rootState.account) return;
       if (
         !rootGetters["orderbook/isConnected"] ||
-        !rootGetters["market/marketInfo"]
+        !rootGetters["market/marketInfo"](market)
       )
         return;
-      if (size < rootGetters["market/minOrderSize"]) return;
+      if (size < rootGetters["market/minOrderSize"](market)) return;
 
-      const priceDicimalPoint: number = rootGetters["market/priceDicimalPoint"];
+      const priceDicimalPoint: number =
+        rootGetters["market/priceDicimalPoint"](market);
       const orderPrice = price.toFixed(priceDicimalPoint);
 
-      const stepSize: number = rootGetters["market/stepSize"];
+      const stepSize: number = rootGetters["market/stepSize"](market);
       const orderSize = String(Math.trunc(size / stepSize) * stepSize);
 
       const param = {

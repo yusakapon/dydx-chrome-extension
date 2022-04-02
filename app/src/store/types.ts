@@ -34,7 +34,7 @@ export interface RootState {
 }
 
 export interface MarketsState {
-  marketInfo?: MarketResponseObject;
+  marketInfoAll?: MarketsResponseObject;
 }
 
 export interface initMarketParam {
