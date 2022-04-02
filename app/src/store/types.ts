@@ -5,6 +5,7 @@ import {
   Market,
   MarketResponseObject,
   TimeInForce,
+  MarketsResponseObject,
 } from "@dydxprotocol/v3-client";
 import { Account } from "@/store/lib/ws/account";
 import { DydxOrderBook } from "@/store/lib/ws/orderbook";
@@ -59,6 +60,11 @@ export interface AccountState {
   isConnected: boolean;
 }
 
+export interface SettingState {
+  settings: { [symbol: string]: any };
+  defaultSettings: { [symbol: string]: any };
+}
+
 export interface MarketOrderParam {
   market: Market;
   side: OrderSide;
@@ -81,4 +87,9 @@ export interface CancelAllParam {
 
 export interface CancelParam {
   orderId: string;
+}
+
+export interface SaveSettingParam {
+  market: Market;
+  setValue: number[];
 }
