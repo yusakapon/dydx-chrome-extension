@@ -1,43 +1,55 @@
 import { Module } from "vuex";
 import { RootState, MarketsState, initMarketParam } from "@/store/types";
+import { Market } from "@dydxprotocol/v3-client";
 
 export const MarketsStoreModule: Module<MarketsState, RootState> = {
   namespaced: true,
   state: {
-    marketInfo: undefined,
+    marketInfoAll: undefined,
   },
   getters: {
-    marketInfo: (state) => {
-      return state.marketInfo;
+    marketInfoAll: (state) => {
+      return state.marketInfoAll;
     },
-    priceDicimalPoint: (state) => {
-      if (!state.marketInfo) return undefined;
-      const numbers = state.marketInfo.tickSize.split(".");
+    marketInfo: (state) => (market: Market) => {
+      if (!state.marketInfoAll) return undefined;
+      return state.marketInfoAll[market];
+    },
+    priceDicimalPoint: (state) => (market: Market) => {
+      if (!state.marketInfoAll || !state.marketInfoAll[market])
+        return undefined;
+      const numbers = state.marketInfoAll[market].tickSize.split(".");
       return numbers[1] ? numbers[1].length : 0;
     },
-    stepSize: (state) => {
-      if (!state.marketInfo) return undefined;
-      return Number(state.marketInfo.stepSize);
+    stepSize: (state) => (market: Market) => {
+      if (!state.marketInfoAll || !state.marketInfoAll[market])
+        return undefined;
+      return Number(state.marketInfoAll[market].stepSize);
     },
-    minOrderSize: (state) => {
-      if (!state.marketInfo) return undefined;
-      return Number(state.marketInfo.minOrderSize);
+    tickSize: (state) => (market: Market) => {
+      if (!state.marketInfoAll || !state.marketInfoAll[market])
+        return undefined;
+      return Number(state.marketInfoAll[market].tickSize);
+    },
+    minOrderSize: (state) => (market: Market) => {
+      if (!state.marketInfoAll || !state.marketInfoAll[market])
+        return undefined;
+      return Number(state.marketInfoAll[market].minOrderSize);
     },
   },
   mutations: {
-    SET_MARKETS(state, marketInfo) {
-      state.marketInfo = marketInfo;
+    SET_MARKETS_ALL(state, marketInfoAll) {
+      state.marketInfoAll = marketInfoAll;
     },
   },
   actions: {
-    async init({ commit, rootState }, { market }: initMarketParam) {
+    async init({ commit, rootState }) {
       console.log("markets init");
       if (!rootState.client) return false;
 
       try {
-        const { markets } = await rootState.client.public.getMarkets(market);
-        console.log(markets[market]);
-        commit("SET_MARKETS", markets[market]);
+        const { markets } = await rootState.client.public.getMarkets();
+        commit("SET_MARKETS_ALL", markets);
         return true;
       } catch (error) {
         return false;
