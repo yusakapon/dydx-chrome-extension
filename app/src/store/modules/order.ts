@@ -8,6 +8,7 @@ import {
   CancelAllParam,
   CancelParam,
 } from "@/store/types";
+import { AxiosServerError } from "@dydxprotocol/v3-client/build/src/lib/axios/errors";
 
 export const OrderStoreModule: Module<OrderState, RootState> = {
   namespaced: true,
@@ -20,13 +21,24 @@ export const OrderStoreModule: Module<OrderState, RootState> = {
       { market, side, size }: MarketOrderParam
     ) {
       console.log("marketOrder");
-      if (!rootState.client || !rootState.account) return;
+      if (!rootState.client || !rootState.account) {
+        return { result: false, message: "Not authenticated." };
+      }
       if (
         !rootGetters["orderbook/isConnected"] ||
         !rootGetters["market/marketInfo"](market)
-      )
-        return;
-      if (size < rootGetters["market/minOrderSize"](market)) return;
+      ) {
+        return {
+          result: false,
+          message: "Market information has not been retrieved.",
+        };
+      }
+      if (size < rootGetters["market/minOrderSize"](market)) {
+        return {
+          result: false,
+          message: "Order size is below the minimum size.",
+        };
+      }
 
       const priceDicimalPoint: number =
         rootGetters["market/priceDicimalPoint"](market);
@@ -53,11 +65,31 @@ export const OrderStoreModule: Module<OrderState, RootState> = {
         limitFee: "0.05", // dummy param
         expiration: new Date(Date.now() + 600000).toISOString(), // dummy param
       };
-      const res = await rootState.client.private.createOrder(
-        param,
-        rootState.account.positionId
-      );
-      console.log(res);
+
+      try {
+        const res = await rootState.client.private.createOrder(
+          param,
+          rootState.account.positionId
+        );
+        console.log(res);
+        return {
+          result: true,
+          message: "success",
+        };
+      } catch (e) {
+        if (e instanceof AxiosServerError) {
+          const data: any = e.data;
+          return {
+            result: false,
+            message: data?.errors[0]?.msg,
+          };
+        } else {
+          return {
+            result: false,
+            message: "error",
+          };
+        }
+      }
     },
 
     async limitOrder(
@@ -73,13 +105,23 @@ export const OrderStoreModule: Module<OrderState, RootState> = {
       }: LimitOrderParam
     ) {
       console.log("limitOrder");
-      if (!rootState.client || !rootState.account) return;
+      if (!rootState.client || !rootState.account) {
+        return { result: false, message: "Not authenticated." };
+      }
       if (
         !rootGetters["orderbook/isConnected"] ||
         !rootGetters["market/marketInfo"](market)
-      )
-        return;
-      if (size < rootGetters["market/minOrderSize"](market)) return;
+      ) {
+        return {
+          result: false,
+          message: "Market information has not been retrieved.",
+        };
+      }
+      if (size < rootGetters["market/minOrderSize"](market))
+        return {
+          result: false,
+          message: "Order size is below the minimum size.",
+        };
 
       const priceDicimalPoint: number =
         rootGetters["market/priceDicimalPoint"](market);
@@ -99,32 +141,94 @@ export const OrderStoreModule: Module<OrderState, RootState> = {
         limitFee: "0.05",
         expiration: new Date(Date.now() + expireSecond * 1000).toISOString(),
       };
-      const res = await rootState.client.private.createOrder(
-        param,
-        rootState.account.positionId
-      );
-      console.log(res);
+
+      try {
+        const res = await rootState.client.private.createOrder(
+          param,
+          rootState.account.positionId
+        );
+        console.log(res);
+        return {
+          result: true,
+          message: "success",
+        };
+      } catch (e) {
+        if (e instanceof AxiosServerError) {
+          const data: any = e.data;
+          return {
+            result: false,
+            message: data?.errors[0]?.msg,
+          };
+        } else {
+          return {
+            result: false,
+            message: "error",
+          };
+        }
+      }
     },
 
     async cancelAll({ commit, rootState }, { market }: CancelAllParam) {
       console.log("cancelAll");
-      if (!rootState.client || !rootState.account) return;
+      if (!rootState.client || !rootState.account) {
+        return { result: false, message: "Not authenticated." };
+      }
 
-      if (market) {
-        const res = await rootState.client.private.cancelAllOrders(market);
-        console.log(res);
-      } else {
-        const res = await rootState.client.private.cancelAllOrders();
-        console.log(res);
+      try {
+        if (market) {
+          const res = await rootState.client.private.cancelAllOrders(market);
+          console.log(res);
+        } else {
+          const res = await rootState.client.private.cancelAllOrders();
+          console.log(res);
+        }
+        return {
+          result: true,
+          message: "success",
+        };
+      } catch (e) {
+        if (e instanceof AxiosServerError) {
+          const data: any = e.data;
+          return {
+            result: false,
+            message: data?.errors[0]?.msg,
+          };
+        } else {
+          return {
+            result: false,
+            message: "error",
+          };
+        }
       }
     },
 
     async cancel({ commit, rootState }, { orderId }: CancelParam) {
       console.log("cancel");
-      if (!rootState.client || !rootState.account) return;
+      if (!rootState.client || !rootState.account) {
+        return { result: false, message: "Not authenticated." };
+      }
 
-      const res = await rootState.client.private.cancelOrder(orderId);
-      console.log(res);
+      try {
+        const res = await rootState.client.private.cancelOrder(orderId);
+        console.log(res);
+        return {
+          result: true,
+          message: "success",
+        };
+      } catch (e) {
+        if (e instanceof AxiosServerError) {
+          const data: any = e.data;
+          return {
+            result: false,
+            message: data?.errors[0]?.msg,
+          };
+        } else {
+          return {
+            result: false,
+            message: "error",
+          };
+        }
+      }
     },
   },
   modules: {},
