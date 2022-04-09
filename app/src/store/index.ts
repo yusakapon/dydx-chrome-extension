@@ -1,5 +1,6 @@
 import { InjectionKey } from "vue";
 import { createStore, useStore as baseUseStore, Store } from "vuex";
+import createPersistedState from "vuex-persistedstate";
 import Web3 from "web3";
 import { DydxClient, Market, SigningMethod } from "@dydxprotocol/v3-client";
 import {
@@ -12,7 +13,8 @@ import {
 import { MarketsStoreModule } from "@/store/modules/market";
 import { OrderStoreModule } from "@/store/modules/order";
 import { OrderbookStoreModule } from "@/store/modules/orderbook";
-import { AccountStoreModule } from "./modules/account";
+import { AccountStoreModule } from "@/store/modules/account";
+import { SettingStoreModule } from "@/store/modules/setting";
 
 declare global {
   interface Window {
@@ -138,7 +140,11 @@ export const store = createStore<RootState>({
           commit("SET_ACCOUNT", account);
 
           // order and position ws
-          dispatch("account/init");
+          await dispatch("account/init");
+          // market info
+          await dispatch("market/init");
+          // setting info
+          await dispatch("setting/init");
         } catch (error) {
           console.log(error);
           commit("SET_ERROR_MSG", "Please install MetaMask");
@@ -156,14 +162,11 @@ export const store = createStore<RootState>({
         return false;
       }
 
-      const marketInit = dispatch("market/init", { market: market });
-      const orderbookInit = dispatch("orderbook/init", { market: market });
-      const [marketInitResult, orderbookInitResult] = await Promise.all([
-        marketInit,
-        orderbookInit,
-      ]);
+      const orderbookInitResult = await dispatch("orderbook/init", {
+        market: market,
+      });
 
-      if (marketInitResult && orderbookInitResult) {
+      if (orderbookInitResult) {
         return true;
       } else {
         commit("SET_ERROR_MSG", "Failed to initialize marketInfo");
@@ -176,7 +179,15 @@ export const store = createStore<RootState>({
     order: OrderStoreModule,
     orderbook: OrderbookStoreModule,
     account: AccountStoreModule,
+    setting: SettingStoreModule,
   },
+  plugins: [
+    createPersistedState({
+      key: "dydx-extension-setting",
+      paths: ["setting"],
+      storage: window.localStorage,
+    }),
+  ],
 });
 
 export function useStore() {
