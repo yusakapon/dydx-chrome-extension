@@ -84,7 +84,7 @@ const currencyPair = (pair: string) => {
         <TradeHeader @currency-pair="currencyPair" />
       </div>
       <div class="border-b border-solid border-white">
-        <TradeInfo />
+        <TradeInfo :currency-pair="currencyPairSelected" />
       </div>
       <div class="border-b border-solid border-white">
         <MarketOrder :currency-pair="currencyPairSelected" />
