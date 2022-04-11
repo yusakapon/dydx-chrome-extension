@@ -15,20 +15,34 @@ const positionSize = ref<number>(0);
 const positionPrice = ref<number>(0);
 const positionPl = ref<number>(0);
 
+const haveOrder = ref<boolean>(false);
+const orderSide = ref<string>();
+const orderSize = ref<number>(0);
+const orderPrice = ref<number>(0);
+const orderStatus = ref<number>(0);
+
 const props = defineProps({
   currencyPair: String,
 });
 
 watch(orders, (orders) => {
   if (market.value) {
-    console.log(orders);
+    const order = orders[Market[market.value]];
+    if (order) {
+      haveOrder.value = true;
+      orderSide.value = order.side;
+      orderSize.value = order.size;
+      orderPrice.value = order.price;
+      orderStatus.value = order.status;
+    } else {
+      haveOrder.value = false;
+    }
   }
 });
 
 watch(positions, (positions) => {
   if (market.value) {
     const position = positions[Market[market.value]];
-    console.log(position);
     if (position) {
       havePosition.value = true;
       const short = position["SHORT"];
@@ -43,9 +57,10 @@ watch(positions, (positions) => {
         positionSize.value = long.size;
         positionPrice.value = long.entryPrice;
         positionPl.value = long.unrealizedPnl;
+      } else {
+        havePosition.value = false;
       }
     } else {
-      console.log("positionfalse");
       havePosition.value = false;
     }
   }
