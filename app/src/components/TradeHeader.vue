@@ -9,6 +9,8 @@ const selectedPairs = ref<string>("");
 const currencyPairs = computed(() => {
   return Market;
 });
+const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
+const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
 
 const emit = defineEmits(["currency-pair"]);
 
@@ -55,7 +57,7 @@ const setUrl = (pair: string) => {
 </script>
 
 <template>
-  <div class="flex p-2">
+  <div class="flex p-2 items-center">
     <select
       class="bg-modal-container py-1 px-2 mr-2 rounded"
       @change="changeCurrency"
@@ -65,5 +67,14 @@ const setUrl = (pair: string) => {
         {{ key }}
       </option>
     </select>
+    <div class="flex items-center">
+      <div class="p-4">Price</div>
+      <div>
+        <div class="px-2 pb-2">
+          {{ bestAskPrice }}
+        </div>
+        <div class="px-2">{{ bestBidPrice }}</div>
+      </div>
+    </div>
   </div>
 </template>
