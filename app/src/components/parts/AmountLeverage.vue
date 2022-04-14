@@ -2,6 +2,7 @@
 import { reactive, defineProps, ref, watch, defineEmits } from "vue";
 import { useStore } from "@/store";
 import { Market } from "@dydxprotocol/v3-client";
+import { stringify } from "querystring";
 
 const store = useStore();
 const market = ref<keyof typeof Market>();
@@ -13,6 +14,7 @@ const leverageArray = [1, 2, 3, 5, 10];
 
 const props = defineProps({
   currencyPair: Object,
+  orderType: stringify,
 });
 
 watch(props, (props) => {
@@ -20,27 +22,33 @@ watch(props, (props) => {
     const pair = props.currencyPair;
     const marketStr = pair.crypto + "_" + pair.currency;
     market.value = marketStr as keyof typeof Market;
-    getMarketOrderAmount();
+    getOrderAmount();
   }
 });
 const emit = defineEmits(["leverage"]);
 
-const getMarketOrderAmount = () => {
+const getOrderAmount = () => {
   if (market.value) {
-    const marketOrderLevarage = store.getters["setting/marketOrderLeverage"](
-      Market[market.value]
-    );
-    leverageButton.firstLevel = marketOrderLevarage[0];
-    leverageButton.secondLevel = marketOrderLevarage[1];
+    const marketOrderAmount = "setting/marketOrderLeverage";
+    const limitOrderAmount = "setting/limitOrderLeverage";
+    const key =
+      props.orderType == "market" ? marketOrderAmount : limitOrderAmount;
+    const orderLevarage = store.getters[key](Market[market.value]);
+    leverageButton.firstLevel = orderLevarage[0];
+    leverageButton.secondLevel = orderLevarage[1];
   }
 };
-const saveMarketOrderAmount = () => {
+const saveOrderAmount = () => {
   const amountLevarage = [
     leverageButton.firstLevel,
     leverageButton.secondLevel,
   ];
   if (market.value) {
-    store.dispatch("setting/saveMarketOrderLeverage", {
+    const marketOrderAmount = "setting/saveMarketOrderLeverage";
+    const limitOrderAmount = "setting/saveLimitOrderLeverage";
+    const key =
+      props.orderType == "market" ? marketOrderAmount : limitOrderAmount;
+    store.dispatch(key, {
       market: Market[market.value],
       setValue: amountLevarage,
     });
@@ -52,7 +60,7 @@ const countDownLeverage = () => {
     const number = leverageArray.indexOf(leverageButton.firstLevel);
     leverageButton.firstLevel = leverageArray[number - 1];
     leverageButton.secondLevel = leverageArray[number];
-    saveMarketOrderAmount();
+    saveOrderAmount();
   }
 };
 
@@ -61,7 +69,7 @@ const countUpLeverage = () => {
     const number = leverageArray.indexOf(leverageButton.secondLevel);
     leverageButton.firstLevel = leverageArray[number];
     leverageButton.secondLevel = leverageArray[number + 1];
-    saveMarketOrderAmount();
+    saveOrderAmount();
   }
 };
 

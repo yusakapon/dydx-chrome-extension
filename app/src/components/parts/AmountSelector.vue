@@ -2,6 +2,7 @@
 import { reactive, defineProps, ref, watch, defineEmits } from "vue";
 import { useStore } from "@/store";
 import { Market } from "@dydxprotocol/v3-client";
+import { stringify } from "querystring";
 
 const store = useStore();
 const market = ref<keyof typeof Market>();
@@ -13,6 +14,7 @@ const stepButton = reactive({
 
 const props = defineProps({
   currencyPair: Object,
+  orderType: stringify,
 });
 
 watch(props, (props) => {
@@ -20,29 +22,35 @@ watch(props, (props) => {
     const pair = props.currencyPair;
     const marketStr = pair.crypto + "_" + pair.currency;
     market.value = marketStr as keyof typeof Market;
-    getMarketOrderAmount();
+    getOrderAmount();
   }
 });
 const emit = defineEmits(["step"]);
 
-const getMarketOrderAmount = () => {
+const getOrderAmount = () => {
   if (market.value) {
-    const marketOrderAmount = store.getters["setting/marketOrderAmount"](
-      Market[market.value]
-    );
-    stepButton.firstLevel = marketOrderAmount[0];
-    stepButton.secondLevel = marketOrderAmount[1];
-    stepButton.thirdLevel = marketOrderAmount[2];
+    const marketOrderAmount = "setting/marketOrderAmount";
+    const limitOrderAmount = "setting/limitOrderAmount";
+    const key =
+      props.orderType == "market" ? marketOrderAmount : limitOrderAmount;
+    const orderAmount = store.getters[key](Market[market.value]);
+    stepButton.firstLevel = orderAmount[0];
+    stepButton.secondLevel = orderAmount[1];
+    stepButton.thirdLevel = orderAmount[2];
   }
 };
-const saveMarketOrderAmount = () => {
+const saveOrderAmount = () => {
   const amountArray = [
     stepButton.firstLevel,
     stepButton.secondLevel,
     stepButton.thirdLevel,
   ];
   if (market.value) {
-    store.dispatch("setting/saveMarketOrderAmount", {
+    const marketOrderAmount = "setting/saveMarketOrderAmount";
+    const limitOrderAmount = "setting/saveLimitOrderAmount";
+    const key =
+      props.orderType == "market" ? marketOrderAmount : limitOrderAmount;
+    store.dispatch(key, {
       market: Market[market.value],
       setValue: amountArray,
     });
@@ -54,7 +62,7 @@ const countDownAmount = () => {
     stepButton.firstLevel = stepButton.firstLevel / 10;
     stepButton.secondLevel = stepButton.secondLevel / 10;
     stepButton.thirdLevel = stepButton.thirdLevel / 10;
-    saveMarketOrderAmount();
+    saveOrderAmount();
   }
 };
 
@@ -63,7 +71,7 @@ const countUpAmount = () => {
     stepButton.firstLevel = stepButton.firstLevel * 10;
     stepButton.secondLevel = stepButton.secondLevel * 10;
     stepButton.thirdLevel = stepButton.thirdLevel * 10;
-    saveMarketOrderAmount();
+    saveOrderAmount();
   }
 };
 
