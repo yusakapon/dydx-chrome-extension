@@ -141,7 +141,7 @@ export const store = createStore<RootState>({
 
           // order and position ws
           await dispatch("account/init");
-          // market info
+          // market info ws
           await dispatch("market/init");
           // setting info
           await dispatch("setting/init");

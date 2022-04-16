@@ -9,6 +9,7 @@ import {
 } from "@dydxprotocol/v3-client";
 import { Account } from "@/store/lib/ws/account";
 import { DydxOrderBook } from "@/store/lib/ws/orderbook";
+import { Markets } from "@/store/lib/ws/markets";
 
 export enum API_HOST {
   PRODUCTION = "https://api.dydx.exchange",
@@ -36,6 +37,8 @@ export interface RootState {
 
 export interface MarketsState {
   marketInfoAll?: MarketsResponseObject;
+  marketsWs?: Markets;
+  isConnected: boolean;
 }
 
 export interface initMarketParam {
