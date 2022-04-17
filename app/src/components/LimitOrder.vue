@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { reactive, ref, watch, defineProps, computed } from "vue";
 import { useStore } from "@/store";
-import { Market, OrderSide } from "@dydxprotocol/v3-client";
+import { Market, OrderSide, TimeInForce } from "@dydxprotocol/v3-client";
 import AppAccordion from "./parts/AppAccordion.vue";
 import AmountSelector from "./parts/AmountSelector.vue";
 import AmountLeverage from "./parts/AmountLeverage.vue";
 import AmountClose from "./parts/AmountClose.vue";
+import OrderPrice from "./parts/OrderPrice.vue";
 
 const orderType = "limit";
 const store = useStore();
@@ -24,7 +25,18 @@ const buttonDisabled = reactive({
   buy: false as boolean,
 });
 
-const isPriceShow = ref<boolean>(false);
+const price = ref<number>(0);
+const setPrice = ref<number>(0);
+const priceStep = ref<number>(1);
+const isPriceShow = ref<boolean>(true);
+
+const postOnly = ref<boolean>(false);
+
+const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
+const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
+const midPrice = computed(() =>
+  Math.floor((bestAskPrice.value + bestBidPrice.value) / 2)
+);
 
 watch(props, (props) => {
   if (props.currencyPair) {
@@ -36,23 +48,20 @@ watch(props, (props) => {
 });
 
 watch(amount, () => {
-  const midPrice = getMidPrice();
-  usd.value = Math.round(amount.value * midPrice * 1000) / 1000;
+  usd.value = Math.round(amount.value * midPrice.value * 1000) / 1000;
   buttonDisabled.sell = false;
   buttonDisabled.buy = false;
 });
 
 watch(usd, () => {
-  const midPrice = getMidPrice();
-  amount.value = Math.round((usd.value / midPrice) * 1000) / 1000;
+  amount.value = Math.round((usd.value / midPrice.value) * 1000) / 1000;
 });
 
-const getMidPrice = () => {
-  const bestAskPrice = store.getters["orderbook/bestAskPrice"];
-  const bestBidPrice = store.getters["orderbook/bestBidPrice"];
-  const midPrice = (bestAskPrice + bestBidPrice) / 2;
-  return midPrice;
-};
+watch(midPrice, () => {
+  if (price.value === 0) {
+    setMidPrice();
+  }
+});
 
 const countUpAmount = (argStep: number) => {
   step.value = argStep;
@@ -85,17 +94,48 @@ const setClose = () => {
   }
 };
 
+const selectPrice = (price: number) => {
+  if (price === 0) {
+    isPriceShow.value = true;
+  } else {
+    isPriceShow.value = false;
+    setPrice.value = price;
+  }
+};
+
+const setMidPrice = () => {
+  price.value = midPrice.value;
+};
+
+const countDownStep = () => {
+  if (priceStep.value > 1) {
+    priceStep.value /= 10;
+  }
+};
+
+const countUpStep = () => {
+  if (priceStep.value < 1000) {
+    priceStep.value *= 10;
+  }
+};
+
 const limitBuy = () => {
   const side = OrderSide.BUY;
-  marketOrder(side);
+  const price = isPriceShow.value
+    ? priceStep.value
+    : midPrice.value - setPrice.value;
+  marketOrder(side, price);
 };
 
 const limitSell = () => {
   const side = OrderSide.SELL;
-  marketOrder(side);
+  const price = isPriceShow.value
+    ? priceStep.value
+    : midPrice.value + setPrice.value;
+  marketOrder(side, price);
 };
 
-const marketOrder = async (orderSide: OrderSide) => {
+const marketOrder = async (orderSide: OrderSide, price: number) => {
   try {
     const key = (currencyPair.crypto +
       "_" +
@@ -104,16 +144,16 @@ const marketOrder = async (orderSide: OrderSide) => {
       market: Market[key],
       side: orderSide,
       size: amount.value,
+      price: price,
+      postOnly: postOnly.value,
+      timeInForce: TimeInForce.GTT,
+      expireSecond: 100,
     });
     console.log(result);
   } catch (error) {
     console.log(error);
   }
 };
-
-// const togglePrice = () => {
-//   isPriceShow.value = !isPriceShow.value;
-// };
 </script>
 
 <template>
@@ -159,21 +199,52 @@ const marketOrder = async (orderSide: OrderSide) => {
             v-model="usd"
           />
         </div>
+        <div>
+          <span class="text-sm">Price</span>
+        </div>
         <div class="inline-flex w-full text-sm my-1">
-          <label>
+          <OrderPrice :currency-pair="currencyPair" @price="selectPrice" />
+        </div>
+        <div class="inline-flex w-full text-sm my-1" v-show="isPriceShow">
+          <div class="py-1 flex items-center justify-center w-full">
+            <button class="px-1 mr-1 font-bold text-lg" @click="setMidPrice">
+              <fa icon="refresh"></fa>
+            </button>
             <input
-              type="checkbox"
-              name="toggle"
-              id="toggle"
-              class="hidden peer"
-              v-model="isPriceShow"
+              type="number"
+              min="0"
+              max="1000000"
+              :step="priceStep"
+              class="w-1/2 px-2 py-2 bg-modal-container rounded"
+              v-model="price"
             />
-            <div
-              class="w-12 py-2 text-center cursor-pointer bg-modal-container rounded border border-modal-container peer-checked:bg-transparent peer-checked:border-modal-container"
-            >
-              Self
-            </div>
-          </label>
+            <span class="ml-2 px-1 text-sm">step</span>
+            <button @click="countDownStep">
+              <fa icon="caret-left"></fa>
+            </button>
+            <input
+              type="number"
+              min="0"
+              max="10000"
+              :step="1"
+              readonly
+              class="w-12 px-2 py-2 bg-modal-container rounded text-center no-count"
+              v-model="priceStep"
+            />
+            <button class="mr-1" @click="countUpStep">
+              <fa icon="caret-right"></fa>
+            </button>
+          </div>
+        </div>
+        <div class="py-1 inline-flex items-center">
+          <input
+            type="checkbox"
+            name="post-only"
+            id="post-only"
+            class="form-checkbox h-4 w-4"
+            v-model="postOnly"
+          />
+          <label for="post-only" class="text-sm ml-1">Post Only</label>
         </div>
         <div class="pb-4 pt-2 flex justify-between">
           <button
@@ -195,3 +266,11 @@ const marketOrder = async (orderSide: OrderSide) => {
     </AppAccordion>
   </div>
 </template>
+
+<style scoped>
+.no-count::-webkit-outer-spin-button,
+.no-count::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+</style>
