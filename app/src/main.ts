@@ -7,7 +7,6 @@ import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import "./index.css";
 
 library.add(fas);
-
 document
   ?.querySelector("body")
   ?.insertAdjacentHTML(

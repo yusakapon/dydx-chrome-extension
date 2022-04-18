@@ -109,7 +109,7 @@ const currencyPair = (pair: string) => {
         <MarketOrder :currency-pair="currencyPairSelected" />
       </div>
       <div>
-        <LimitOrder />
+        <LimitOrder :currency-pair="currencyPairSelected" />
       </div>
     </div>
     <div class="authorize" v-else>
