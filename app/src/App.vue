@@ -48,8 +48,12 @@ const onMoveDragStart = (event: MouseEvent) => {
 const onDrag = (event: MouseEvent) => {
   // 移動ドラッグの時
   if (isMoveDragging.value) {
-    const modalWidth = modalRef.value?.clientWidth;
-    const modalHeight = modalRef.value?.clientHeight;
+    const modalWidth = modalRef.value?.clientWidth
+      ? modalRef.value?.clientWidth
+      : 0;
+    const modalHeight = modalRef.value?.clientHeight
+      ? modalRef.value?.clientHeight
+      : 0;
     pos.x = clamp(
       startClientRect.x + (event.clientX - dragStartX.value),
       0,
