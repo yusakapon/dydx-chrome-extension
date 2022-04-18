@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { clamp } from "lodash";
 import { ref, reactive, onMounted, onBeforeMount } from "vue";
 import LimitOrder from "./components/LimitOrder.vue";
 import MarketOrder from "./components/MarketOrder.vue";
@@ -20,6 +21,8 @@ const startClientRect = reactive({
   x: 0 as number,
   y: 0 as number,
 });
+
+const modalRef = ref<HTMLImageElement>();
 
 onMounted(() => {
   document.addEventListener("mousemove", onDrag);
@@ -43,9 +46,20 @@ const onMoveDragStart = (event: MouseEvent) => {
 };
 
 const onDrag = (event: MouseEvent) => {
+  // 移動ドラッグの時
   if (isMoveDragging.value) {
-    pos.x = startClientRect.x + (event.clientX - dragStartX.value);
-    pos.y = startClientRect.y + (event.clientY - dragStartY.value);
+    const modalWidth = modalRef.value?.clientWidth;
+    const modalHeight = modalRef.value?.clientHeight;
+    pos.x = clamp(
+      startClientRect.x + (event.clientX - dragStartX.value),
+      0,
+      window.innerWidth - modalWidth
+    );
+    pos.y = clamp(
+      startClientRect.y + (event.clientY - dragStartY.value),
+      0,
+      window.innerHeight - modalHeight
+    );
   }
 };
 
@@ -72,6 +86,7 @@ const currencyPair = (pair: string) => {
     :style="{
       transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
     }"
+    ref="modalRef"
   >
     <div
       class="h-12 text-center flex justify-center items-center border-b border-solid border-white cursor-move"
@@ -90,7 +105,7 @@ const currencyPair = (pair: string) => {
         <MarketOrder :currency-pair="currencyPairSelected" />
       </div>
       <div>
-        <LimitOrder :currency-pair="currencyPairSelected" />
+        <LimitOrder />
       </div>
     </div>
     <div class="authorize" v-else>
