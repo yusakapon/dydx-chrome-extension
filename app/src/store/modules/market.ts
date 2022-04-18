@@ -54,7 +54,7 @@ export const MarketsStoreModule: Module<MarketsState, RootState> = {
     },
   },
   actions: {
-    async init({ commit, rootState }) {
+    async init({ commit, dispatch, rootState }) {
       console.log("markets init");
       if (!rootState.client) return false;
 
@@ -63,6 +63,7 @@ export const MarketsStoreModule: Module<MarketsState, RootState> = {
 
       const marketsWs = new Markets(rootState.hostWs, rootState.client, () => {
         commit("UPDATE_MARKETS");
+        dispatch("account/updateUnrealizedPL", null, { root: true });
       });
       await marketsWs.start();
 
