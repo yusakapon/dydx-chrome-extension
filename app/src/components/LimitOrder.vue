@@ -1,88 +1,158 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { reactive, ref, watch, defineProps, computed } from "vue";
+import { useStore } from "@/store";
+import { Market, OrderSide, TimeInForce } from "@dydxprotocol/v3-client";
 import AppAccordion from "./parts/AppAccordion.vue";
+import AmountSelector from "./parts/AmountSelector.vue";
+import AmountLeverage from "./parts/AmountLeverage.vue";
+import AmountClose from "./parts/AmountClose.vue";
+import OrderPrice from "./parts/OrderPrice.vue";
+
+const orderType = "limit";
+const store = useStore();
+
+const props = defineProps({
+  currencyPair: String,
+});
 
 const amount = ref<number>(0);
-const amountStep = ref<number>(0.01);
+const step = ref<number>(0.01);
+const usd = ref<number>(0);
+const currencyPair = reactive({ crypto: "", currency: "" });
+const positions = computed(() => store.getters["account/positions"]);
+const buttonDisabled = reactive({
+  sell: false as boolean,
+  buy: false as boolean,
+});
+
 const price = ref<number>(0);
+const setPrice = ref<number>(0);
 const priceStep = ref<number>(1);
+const isPriceShow = ref<boolean>(true);
 
-const countDownAmount = () => {
+const postOnly = ref<boolean>(false);
+
+const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
+const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
+const midPrice = computed(() =>
+  Math.floor((bestAskPrice.value + bestBidPrice.value) / 2)
+);
+
+watch(props, (props) => {
+  if (props.currencyPair) {
+    const pair = props.currencyPair.split("_");
+    currencyPair.crypto = pair[0];
+    currencyPair.currency = pair[1];
+    amount.value = 0;
+  }
+});
+
+watch(amount, () => {
+  usd.value = Math.round(amount.value * midPrice.value * 1000) / 1000;
+  buttonDisabled.sell = false;
+  buttonDisabled.buy = false;
+});
+
+watch(usd, () => {
+  amount.value = Math.round((usd.value / midPrice.value) * 1000) / 1000;
+});
+
+watch(midPrice, () => {
+  if (price.value === 0) {
+    setMidPrice();
+  }
+});
+
+const countUpAmount = (argStep: number) => {
+  step.value = argStep;
   if (amount.value !== null) {
-    amount.value =
-      amount.value - amountStep.value < 0
-        ? 0
-        : Math.round(amount.value * 100 - amountStep.value * 100) / 100;
+    amount.value = Math.round(step.value * 1000 + amount.value * 1000) / 1000;
   } else {
-    amount.value = amountStep.value;
+    amount.value = step.value;
   }
 };
 
-const countUpAmount = () => {
-  if (amount.value !== null) {
-    amount.value =
-      Math.round(amountStep.value * 100 + amount.value * 100) / 100;
-  } else {
-    amount.value = amountStep.value;
-  }
-};
-
-const countUpPrice = () => {
-  if (price.value !== null) {
-    price.value = Math.round(priceStep.value * 100 + price.value * 100) / 100;
-  } else {
-    price.value = priceStep.value;
-  }
-};
-const countDownPrice = () => {
-  if (price.value !== null) {
-    price.value =
-      price.value - priceStep.value < 0
-        ? 0
-        : Math.round(price.value * 100 - priceStep.value * 100) / 100;
-  } else {
-    price.value = priceStep.value;
-  }
-};
-
-const countArgAmount = (argStep: number) => {
-  amountStep.value = argStep;
-  if (amount.value !== null) {
-    amount.value =
-      Math.round(amountStep.value * 100 + amount.value * 100) / 100;
-  } else {
-    amount.value = amountStep.value;
-  }
-};
-
-const countArgPrice = (argStep: number) => {
-  priceStep.value = argStep;
-  if (price.value !== null) {
-    price.value = Math.round(priceStep.value * 100 + price.value * 100) / 100;
-  } else {
-    price.value = priceStep.value;
-  }
-};
-
-const setLeverageAmount = (leverage: number) => {
+const setLeverage = (leverage: number) => {
   console.log(leverage);
-  // amount.value = 0;
 };
 
-const clearAmount = () => {
-  amount.value = 0;
+const setClose = () => {
+  const key = (currencyPair.crypto +
+    "_" +
+    currencyPair.currency) as keyof typeof Market;
+  const position = positions.value[Market[key]];
+  const short = position.SHORT;
+  const long = position.LONG;
+  if (short) {
+    const size = short.size;
+    amount.value = -size;
+    // buttonDisabled.sell = true;
+  } else if (long) {
+    const size = long.size;
+    amount.value = size;
+    // buttonDisabled.buy = true;
+  }
 };
-const clearPrice = () => {
-  price.value = 0;
+
+const selectPrice = (price: number) => {
+  if (price === 0) {
+    isPriceShow.value = true;
+  } else {
+    isPriceShow.value = false;
+    setPrice.value = price;
+  }
+};
+
+const setMidPrice = () => {
+  price.value = midPrice.value;
+};
+
+const countDownStep = () => {
+  if (priceStep.value > 1) {
+    priceStep.value /= 10;
+  }
+};
+
+const countUpStep = () => {
+  if (priceStep.value < 1000) {
+    priceStep.value *= 10;
+  }
 };
 
 const limitBuy = () => {
-  console.log("limit buy:" + amount.value);
-  alert("limit buy:" + amount.value);
+  const side = OrderSide.BUY;
+  const price = isPriceShow.value
+    ? priceStep.value
+    : midPrice.value - setPrice.value;
+  marketOrder(side, price);
 };
+
 const limitSell = () => {
-  console.log("limit sell:" + amount.value);
-  alert("limit sell:" + amount.value);
+  const side = OrderSide.SELL;
+  const price = isPriceShow.value
+    ? priceStep.value
+    : midPrice.value + setPrice.value;
+  marketOrder(side, price);
+};
+
+const marketOrder = async (orderSide: OrderSide, price: number) => {
+  try {
+    const key = (currencyPair.crypto +
+      "_" +
+      currencyPair.currency) as keyof typeof Market;
+    const result = await store.dispatch("order/limitOrder", {
+      market: Market[key],
+      side: orderSide,
+      size: amount.value,
+      price: price,
+      postOnly: postOnly.value,
+      timeInForce: TimeInForce.GTT,
+      expireSecond: 100,
+    });
+    console.log(result);
+  } catch (error) {
+    console.log(error);
+  }
 };
 </script>
 
@@ -96,149 +166,98 @@ const limitSell = () => {
         <div>
           <span class="text-sm">Amount</span>
         </div>
-        <div class="pt-1 pb-2 flex items-center">
+        <div class="inline-flex w-full flex my-1">
+          <AmountSelector
+            :currency-pair="currencyPair"
+            :order-type="orderType"
+            @step="countUpAmount"
+          />
+          <AmountLeverage
+            :currency-pair="currencyPair"
+            :order-type="orderType"
+            @leverage="setLeverage"
+          />
+          <AmountClose :currency-pair="currencyPair" @close="setClose" />
+        </div>
+        <div class="pt-1 pb-2 flex items-center justify-center w-full">
+          <span class="px-1 text-sm">{{ currencyPair.crypto }}</span>
           <input
             type="number"
             min="0"
             max="1000000"
-            :step="amountStep"
-            class="w-64p px-2 py-2 bg-modal-container rounded"
+            :step="step"
+            class="w-1/2 px-2 py-2 bg-modal-container rounded"
             v-model="amount"
           />
-          <span class="absolute mr-28 right-0">
-            <button
-              class="bg-gray-700 mr-1 px-2 py-1 rounded"
-              @click="countDownAmount"
-            >
-              <fa icon="minus"></fa>
-            </button>
-            <button
-              class="bg-gray-700 px-2 py-1 rounded"
-              @click="countUpAmount"
-            >
-              <fa icon="plus"></fa>
-            </button>
-          </span>
-          <button
-            class="bg-modal-container w-3/12 ml-2 py-2 rounded"
-            @click="clearAmount"
-          >
-            Clear
-          </button>
-        </div>
-        <div class="inline-flex w-full flex">
-          <button
-            class="bg-modal-container w-1/6 py-2 rounded-l"
-            @click="countArgAmount(0.01)"
-          >
-            +0.01
-          </button>
-          <button
-            class="bg-modal-container w-1/6 py-2 border-r border-l border-modal"
-            @click="countArgAmount(0.1)"
-          >
-            +0.1
-          </button>
-          <button
-            class="bg-modal-container w-1/6 py-2 rounded-r"
-            @click="countArgAmount(1)"
-          >
-            +1
-          </button>
-          <button
-            class="bg-modal-container w-1/6 ml-4 py-2 rounded-l border-r border-modal"
-            @click="setLeverageAmount(1)"
-          >
-            1×
-          </button>
-          <button
-            class="bg-modal-container w-1/6 py-2 rounded-r"
-            @click="setLeverageAmount(2)"
-          >
-            2×
-          </button>
-        </div>
-        <div class="mt-2">
-          <span class="text-sm">Price</span>
-        </div>
-        <div class="pt-1 pb-2 flex items-center">
+          <span class="px-1 text-sm">{{ currencyPair.currency }}</span>
           <input
             type="number"
             min="0"
             max="1000000"
-            :step="priceStep"
-            class="w-64p px-2 py-2 bg-modal-container rounded"
-            v-model="price"
+            :step="10"
+            class="w-1/2 px-2 py-2 bg-modal-container rounded"
+            v-model="usd"
           />
-          <span class="absolute mr-28 right-0">
-            <button
-              class="bg-gray-700 mr-1 px-2 py-1 rounded"
-              @click="countDownPrice"
-            >
-              <fa icon="minus"></fa>
-            </button>
-            <button class="bg-gray-700 px-2 py-1 rounded" @click="countUpPrice">
-              <fa icon="plus"></fa>
-            </button>
-          </span>
-          <button
-            class="bg-modal-container w-3/12 ml-2 rounded"
-            @click="clearPrice"
-          >
-            <fa icon="rotate"></fa>
-          </button>
         </div>
-        <div class="inline-flex w-full flex">
-          <button
-            class="bg-modal-container w-1/5 py-2 rounded-l"
-            @click="countArgPrice(0)"
-          >
-            Self
-          </button>
-          <button
-            class="bg-modal-container w-1/5 py-2 border-r border-l border-modal"
-            @click="countArgPrice(1)"
-          >
-            ±1
-          </button>
-          <button
-            class="bg-modal-container w-1/5 py-2"
-            @click="countArgPrice(10)"
-          >
-            ±10
-          </button>
-          <button
-            class="bg-modal-container w-1/5 py-2 border-r border-l border-modal"
-            @click="countArgPrice(100)"
-          >
-            ±100
-          </button>
-          <button
-            class="bg-modal-container w-1/5 py-2 rounded-r"
-            @click="countArgPrice(1000)"
-          >
-            ±1000
-          </button>
+        <div>
+          <span class="text-sm">Price</span>
         </div>
-        <div class="mt-2 py-2 inline-flex items-center">
+        <div class="inline-flex w-full text-sm my-1">
+          <OrderPrice :currency-pair="currencyPair" @price="selectPrice" />
+        </div>
+        <div class="inline-flex w-full text-sm my-1" v-show="isPriceShow">
+          <div class="py-1 flex items-center justify-center w-full">
+            <button class="px-1 mr-1 font-bold text-lg" @click="setMidPrice">
+              <fa icon="refresh"></fa>
+            </button>
+            <input
+              type="number"
+              min="0"
+              max="1000000"
+              :step="priceStep"
+              class="w-1/2 px-2 py-2 bg-modal-container rounded"
+              v-model="price"
+            />
+            <span class="ml-2 px-1 text-sm">step</span>
+            <button @click="countDownStep">
+              <fa icon="caret-left"></fa>
+            </button>
+            <input
+              type="number"
+              min="0"
+              max="10000"
+              :step="1"
+              readonly
+              class="w-12 px-2 py-2 bg-modal-container rounded text-center no-count"
+              v-model="priceStep"
+            />
+            <button class="mr-1" @click="countUpStep">
+              <fa icon="caret-right"></fa>
+            </button>
+          </div>
+        </div>
+        <div class="py-1 inline-flex items-center">
           <input
             type="checkbox"
             name="post-only"
             id="post-only"
             class="form-checkbox h-4 w-4"
+            v-model="postOnly"
           />
           <label for="post-only" class="text-sm ml-1">Post Only</label>
         </div>
-        <div class="pt-2 pb-4 flex justify-between">
+        <div class="pb-4 pt-2 flex justify-between">
           <button
             @click="limitSell"
             class="bg-modal-container font-semibold py-3 px-8 border border-sell text-sell rounded"
+            :disabled="buttonDisabled.sell"
           >
             Limit Sell
           </button>
           <button
             @click="limitBuy"
             class="bg-modal-container font-semibold py-3 px-8 border border-buy text-buy rounded"
+            :disabled="buttonDisabled.buy"
           >
             Limit Buy
           </button>
@@ -249,13 +268,9 @@ const limitSell = () => {
 </template>
 
 <style scoped>
-/* hide default button */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
+.no-count::-webkit-outer-spin-button,
+.no-count::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
-}
-.w-64p {
-  width: 64%;
 }
 </style>

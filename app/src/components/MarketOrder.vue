@@ -7,6 +7,7 @@ import AmountSelector from "./parts/AmountSelector.vue";
 import AmountLeverage from "./parts/AmountLeverage.vue";
 import AmountClose from "./parts/AmountClose.vue";
 
+const orderType = "market";
 const store = useStore();
 
 const props = defineProps({
@@ -121,9 +122,14 @@ const marketOrder = async (orderSide: OrderSide) => {
           <span class="text-sm">Amount</span>
         </div>
         <div class="inline-flex w-full flex my-1">
-          <AmountSelector :currency-pair="currencyPair" @step="countUpAmount" />
+          <AmountSelector
+            :currency-pair="currencyPair"
+            :order-type="orderType"
+            @step="countUpAmount"
+          />
           <AmountLeverage
             :currency-pair="currencyPair"
+            :order-type="orderType"
             @leverage="setLeverage"
           />
           <AmountClose :currency-pair="currencyPair" @close="setClose" />
