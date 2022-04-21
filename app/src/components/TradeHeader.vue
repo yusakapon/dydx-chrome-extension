@@ -15,26 +15,15 @@ const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
 const emit = defineEmits(["currency-pair"]);
 
 onMounted(() => {
-  const pair = getUrl();
-  if (pair) {
-    selectedPairs.value = pair;
-    emit("currency-pair", selectedPairs.value);
-    initMarket(selectedPairs.value as keyof typeof Market);
-  }
-  const observer = new MutationObserver(() => {
-    const pair = getUrl();
-    if (pair && pair !== selectedPairs.value) {
-      selectedPairs.value = pair;
-      emit("currency-pair", selectedPairs.value);
-      initMarket(selectedPairs.value as keyof typeof Market);
-    }
-  });
-  observer.observe(document, { childList: true, subtree: true });
+  const pair = getPairFromUrl();
+  selectedPairs.value = pair;
+  emit("currency-pair", selectedPairs.value);
+  initMarket(selectedPairs.value as keyof typeof Market);
 });
 
 const changeCurrency = (event: Event) => {
-  const value = (event.target as HTMLInputElement).value;
-  setUrl(value);
+  emit("currency-pair", selectedPairs.value);
+  initMarket(selectedPairs.value as keyof typeof Market);
 };
 
 const initMarket = async (market: keyof typeof Market) => {
@@ -43,9 +32,11 @@ const initMarket = async (market: keyof typeof Market) => {
   });
 };
 
-const getUrl = () => {
+const getPairFromUrl = () => {
   const url = location.pathname;
-  const pair = url.split("/").slice(-1)[0].replace("-", "_");
+  const splitUrl = url.split("/");
+  if (splitUrl[1] !== "trade") return "BTC_USD";
+  const pair = splitUrl[2].replace("-", "_");
   return pair;
 };
 
