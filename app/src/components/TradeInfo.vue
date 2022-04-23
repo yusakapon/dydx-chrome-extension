@@ -25,6 +25,10 @@ type order = {
   market: Market;
 };
 const orderArray = ref<Array<order>>([]);
+const orderCount = computed(() => {
+  return orderArray.value.length;
+});
+
 const props = defineProps({
   currencyPair: String,
 });
@@ -84,6 +88,19 @@ const cancelOrder = (id: string) => {
     orderId: id,
   });
 };
+
+const cancelAllOrders = () => {
+  if (market.value) {
+    store.dispatch("order/cancelAll", {
+      market: Market[market.value],
+    });
+  }
+};
+
+const isActive = (status: OrderStatus) => {
+  const isActive = status === "OPEN" ? "" : "opacity-60";
+  return isActive;
+};
 </script>
 
 <template>
@@ -119,34 +136,53 @@ const cancelOrder = (id: string) => {
           </table>
         </div>
         <div v-else class="text-sm pl-1">none</div>
-        <div class="text-sm">Order</div>
+        <div class="text-sm">
+          <span>Order</span>
+          <span v-if="orderCount === 1" class="pl-4"
+            >{{ orderCount }} order</span
+          >
+          <span v-else class="pl-4">{{ orderCount }} orders</span>
+          <button
+            v-show="orderCount > 0"
+            class="float-right bg-modal-container p-1 rounded mt-1"
+            @click="cancelAllOrders"
+          >
+            Cancel All
+          </button>
+        </div>
         <div v-if="haveOrder" class="text-sm">
-          <table class="table-auto text-center w-full">
-            <thead>
+          <table class="text-center w-full">
+            <thead class="block">
               <tr>
-                <th class="w-1/5 p-1">Side</th>
-                <th class="w-1/5 p-1">Size</th>
-                <th class="w-1/5 p-1">Price</th>
-                <th class="w-1/5 p-1">Status</th>
-                <th class="w-1/5 p-1"></th>
+                <th class="w-14 p-1">Side</th>
+                <th class="w-14 p-1">Size</th>
+                <th class="w-14 p-1">Price</th>
+                <th class="w-14 p-1">Status</th>
+                <th class="w-14 p-1">Cancel</th>
               </tr>
             </thead>
-            <tbody class="overflow-y-scroll w-full">
+            <tbody class="overflow-y-scroll max-h-20 block">
               <tr
                 class="bg-modal-container"
                 v-for="order in orderArray"
                 v-bind:key="order.id"
+                v-bind:class="isActive(order.status)"
               >
-                <td class="border border-modal p-1 rounded-l">
+                <td class="border border-modal p-1 w-14">
                   {{ order.side }}
                 </td>
-                <td class="border border-modal p-1">{{ order.amount }}</td>
-                <td class="border border-modal p-1">{{ order.price }}</td>
-                <td class="border border-modal p-1">
+                <td class="border border-modal p-1 w-14">
+                  {{ order.amount }}
+                </td>
+                <td class="border border-modal p-1 w-14">{{ order.price }}</td>
+                <td class="border border-modal p-1 w-14">
                   {{ order.status }}
                 </td>
-                <td class="border border-modal p-1 rounded-r">
-                  <button class="w-full h-full" @click="cancelOrder(order.id)">
+                <td class="border border-modal px-4 py-0.5 w-14">
+                  <button
+                    class="w-full h-full hover:bg-modal-selected"
+                    @click="cancelOrder(order.id)"
+                  >
                     <fa icon="times"></fa>
                   </button>
                 </td>
