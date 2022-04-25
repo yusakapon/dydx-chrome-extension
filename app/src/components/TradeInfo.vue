@@ -15,7 +15,6 @@ const positionSize = ref<number>(0);
 const positionPrice = ref<number>(0);
 const positionPl = ref<number>(0);
 
-const haveOrder = ref<boolean>(false);
 type order = {
   id: string;
   price: number;
@@ -33,25 +32,29 @@ const props = defineProps({
   currencyPair: String,
 });
 
-watch(orders, (orders) => {
-  const length = Object.keys(orders).length;
-  haveOrder.value = length ? true : false;
+watch(orders, () => {
+  saveOrders();
+});
+
+const saveOrders = () => {
   orderArray.value = [];
-  for (const key in orders) {
-    if (Object.prototype.hasOwnProperty.call(orders, key)) {
-      const element = orders[key];
-      const order: order = {
-        id: element.id,
-        price: element.price,
-        amount: element.size,
-        status: element.status,
-        side: element.side,
-        market: element.market,
-      };
-      orderArray.value.push(order);
+  for (const key in orders.value) {
+    if (Object.prototype.hasOwnProperty.call(orders.value, key)) {
+      const element = orders.value[key];
+      if (market.value && element.market === Market[market.value]) {
+        const order: order = {
+          id: element.id,
+          price: element.price,
+          amount: element.size,
+          status: element.status,
+          side: element.side,
+          market: element.market,
+        };
+        orderArray.value.push(order);
+      }
     }
   }
-});
+};
 
 watch(positions, (positions) => {
   if (market.value) {
@@ -81,6 +84,7 @@ watch(positions, (positions) => {
 
 watch(props, (props) => {
   market.value = props.currencyPair as keyof typeof Market;
+  saveOrders();
 });
 
 const cancelOrder = (id: string) => {
@@ -150,7 +154,7 @@ const isActive = (status: OrderStatus) => {
             Cancel All
           </button>
         </div>
-        <div v-if="haveOrder" class="text-sm">
+        <div v-if="orderCount > 0" class="text-sm">
           <table class="text-center w-full">
             <thead class="block">
               <tr>
