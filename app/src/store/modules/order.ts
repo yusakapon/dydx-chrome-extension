@@ -3,6 +3,7 @@ import { OrderSide, OrderType, TimeInForce } from "@dydxprotocol/v3-client";
 import {
   RootState,
   OrderState,
+  EditOrderParam,
   MarketOrderParam,
   LimitOrderParam,
   CancelAllParam,
@@ -140,6 +141,85 @@ export const OrderStoreModule: Module<OrderState, RootState> = {
         timeInForce: timeInForce,
         limitFee: "0.05",
         expiration: new Date(Date.now() + expireSecond * 1000).toISOString(),
+      };
+
+      try {
+        const res = await rootState.client.private.createOrder(
+          param,
+          rootState.account.positionId
+        );
+        console.log(res);
+        return {
+          result: true,
+          message: "success",
+        };
+      } catch (e) {
+        if (e instanceof AxiosServerError) {
+          const data: any = e.data;
+          return {
+            result: false,
+            message: data?.errors[0]?.msg,
+          };
+        } else {
+          return {
+            result: false,
+            message: "error",
+          };
+        }
+      }
+    },
+
+    async editOrder(
+      { commit, rootState, rootGetters },
+      { orderId, price }: EditOrderParam
+    ) {
+      console.log("editOrder");
+      if (!rootState.client || !rootState.account) {
+        return { result: false, message: "Not authenticated." };
+      }
+
+      const orders = rootGetters["account/orders"];
+      if (!orders[orderId]) {
+        return {
+          result: false,
+          message: "This order does not exist.",
+        };
+      }
+      const targetOrder = orders[orderId];
+      const market = targetOrder["market"];
+
+      if (
+        !rootGetters["orderbook/isConnected"] ||
+        !rootGetters["market/marketInfo"](market)
+      ) {
+        return {
+          result: false,
+          message: "Market information has not been retrieved.",
+        };
+      }
+
+      if (targetOrder["type"] !== OrderType.LIMIT) {
+        return {
+          result: false,
+          message: "Only limit order can be edited.",
+        };
+      }
+
+      const priceDicimalPoint: number =
+        rootGetters["market/priceDicimalPoint"](market);
+      const orderPrice = price.toFixed(priceDicimalPoint);
+
+      const param = {
+        type: OrderType.LIMIT,
+        market: market,
+        side: targetOrder["side"],
+        size: targetOrder["size"],
+        price: orderPrice,
+        postOnly: targetOrder["postOnly"],
+        timeInForce: targetOrder["timeInForce"],
+        limitFee: "0.05",
+        expiration: targetOrder["expiresAt"],
+        cancelId: orderId,
       };
 
       try {

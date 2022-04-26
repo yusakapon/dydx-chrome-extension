@@ -84,6 +84,11 @@ export interface LimitOrderParam {
   expireSecond: number;
 }
 
+export interface EditOrderParam {
+  orderId: string;
+  price: number;
+}
+
 export interface CancelAllParam {
   market?: Market;
 }
