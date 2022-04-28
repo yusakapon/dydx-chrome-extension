@@ -7,14 +7,57 @@ import { Market, OrderSide, OrderStatus } from "@dydxprotocol/v3-client";
 const store = useStore();
 const orders = computed(() => store.getters["account/orders"]);
 const positions = computed(() => store.getters["account/positions"]);
+
 const market = ref<keyof typeof Market>();
+const props = defineProps({
+  currencyPair: String,
+});
+watch(props, (props) => {
+  market.value = props.currencyPair as keyof typeof Market;
+  saveOrders();
+});
 
-const havePosition = ref<boolean>(false);
-const positionSide = ref<string>();
-const positionSize = ref<number>(0);
-const positionPrice = ref<number>(0);
-const positionPl = ref<number>(0);
+// position
+type position = {
+  side: string;
+  size: number;
+  price: number;
+  pl: number;
+};
+const positionArray = ref<Array<position>>([]);
+const positionCount = computed(() => {
+  return positionArray.value.length;
+});
 
+watch(positions, (positions) => {
+  positionArray.value = [];
+  if (market.value) {
+    const element = positions[Market[market.value]];
+    if (element) {
+      const short = element["SHORT"];
+      const long = element["LONG"];
+      if (short) {
+        const position: position = {
+          side: short.side,
+          size: -short.size,
+          price: short.entryPrice,
+          pl: short.unrealizedPnl,
+        };
+        positionArray.value.push(position);
+      } else if (long) {
+        const position: position = {
+          side: long.side,
+          size: long.size,
+          price: long.entryPrice,
+          pl: long.unrealizedPnl,
+        };
+        positionArray.value.push(position);
+      }
+    }
+  }
+});
+
+// order
 type order = {
   id: string;
   price: number;
@@ -26,10 +69,6 @@ type order = {
 const orderArray = ref<Array<order>>([]);
 const orderCount = computed(() => {
   return orderArray.value.length;
-});
-
-const props = defineProps({
-  currencyPair: String,
 });
 
 watch(orders, () => {
@@ -56,37 +95,7 @@ const saveOrders = () => {
   }
 };
 
-watch(positions, (positions) => {
-  if (market.value) {
-    const position = positions[Market[market.value]];
-    if (position) {
-      havePosition.value = true;
-      const short = position["SHORT"];
-      const long = position["LONG"];
-      if (short) {
-        positionSide.value = short.side;
-        positionSize.value = -short.size;
-        positionPrice.value = short.entryPrice;
-        positionPl.value = short.unrealizedPnl;
-      } else if (long) {
-        positionSide.value = long.side;
-        positionSize.value = long.size;
-        positionPrice.value = long.entryPrice;
-        positionPl.value = long.unrealizedPnl;
-      } else {
-        havePosition.value = false;
-      }
-    } else {
-      havePosition.value = false;
-    }
-  }
-});
-
-watch(props, (props) => {
-  market.value = props.currencyPair as keyof typeof Market;
-  saveOrders();
-});
-
+// function
 const cancelOrder = (id: string) => {
   store.dispatch("order/cancel", {
     orderId: id,
@@ -101,9 +110,40 @@ const cancelAllOrders = () => {
   }
 };
 
+// class
 const isActive = (status: OrderStatus) => {
   const isActive = status === "OPEN" ? "" : "opacity-60";
   return isActive;
+};
+
+const textSide = (side: OrderSide) => {
+  let textSide;
+  switch (side) {
+    case OrderSide.SELL:
+      textSide = "text-sell";
+      break;
+    case OrderSide.BUY:
+      textSide = "text-buy";
+      break;
+    default:
+      break;
+  }
+  return textSide;
+};
+
+const textSideString = (side: string) => {
+  let textSide;
+  switch (side) {
+    case "SHORT":
+      textSide = "text-sell";
+      break;
+    case "LONG":
+      textSide = "text-buy";
+      break;
+    default:
+      break;
+  }
+  return textSide;
 };
 </script>
 
@@ -115,25 +155,36 @@ const isActive = (status: OrderStatus) => {
       </template>
       <template v-slot:content>
         <div class="text-sm">Position</div>
-        <div v-if="havePosition" class="text-sm">
-          <table class="table-auto text-center w-full">
-            <thead>
+        <div v-if="positionCount" class="text-sm">
+          <table class="text-center w-full">
+            <thead class="block">
               <tr>
-                <th class="w-1/4 p-1">Side</th>
-                <th class="w-1/4 p-1">Size</th>
-                <th class="w-1/4 p-1">Price</th>
-                <th class="w-1/4 p-1">PL</th>
+                <th class="w-14 p-1">Side</th>
+                <th class="w-14 p-1">Size</th>
+                <th class="w-28 p-1">Price</th>
+                <th class="w-14 p-1">PL</th>
               </tr>
             </thead>
-            <tbody>
-              <tr class="bg-modal-container">
-                <td class="border border-modal p-1 rounded-l">
-                  {{ positionSide }}
+            <tbody class="block">
+              <tr
+                class="bg-modal-container"
+                v-for="position in positionArray"
+                v-bind:key="position.side"
+              >
+                <td
+                  class="border border-modal p-1 w-14"
+                  v-bind:class="textSideString(position.side)"
+                >
+                  {{ position.side }}
                 </td>
-                <td class="border border-modal p-1">{{ positionSize }}</td>
-                <td class="border border-modal p-1">{{ positionPrice }}</td>
-                <td class="border border-modal p-1 rounded-r">
-                  {{ positionPl }}
+                <td class="border border-modal p-1 w-14">
+                  {{ position.size }}
+                </td>
+                <td class="border border-modal p-1 w-28">
+                  {{ position.price }}
+                </td>
+                <td class="border border-modal p-1 w-14">
+                  {{ position.pl }}
                 </td>
               </tr>
             </tbody>
@@ -142,10 +193,6 @@ const isActive = (status: OrderStatus) => {
         <div v-else class="text-sm pl-1">none</div>
         <div class="text-sm">
           <span>Order</span>
-          <span v-if="orderCount === 1" class="pl-4"
-            >{{ orderCount }} order</span
-          >
-          <span v-else class="pl-4">{{ orderCount }} orders</span>
           <button
             v-show="orderCount > 0"
             class="float-right bg-modal-container p-1 rounded mt-1"
@@ -154,25 +201,31 @@ const isActive = (status: OrderStatus) => {
             Cancel All
           </button>
         </div>
-        <div v-if="orderCount > 0" class="text-sm">
+        <div class="text-sm">
           <table class="text-center w-full">
             <thead class="block">
               <tr>
                 <th class="w-14 p-1">Side</th>
                 <th class="w-14 p-1">Size</th>
                 <th class="w-14 p-1">Price</th>
-                <th class="w-14 p-1">Status</th>
+                <th class="w-14 p-1">Market</th>
                 <th class="w-14 p-1">Cancel</th>
               </tr>
             </thead>
-            <tbody class="overflow-y-scroll max-h-20 block">
+            <tbody class="overflow-y-scroll h-tbody block">
+              <tr v-show="orderCount === 0">
+                <td class="pl-3.5">no orders</td>
+              </tr>
               <tr
                 class="bg-modal-container"
                 v-for="order in orderArray"
                 v-bind:key="order.id"
                 v-bind:class="isActive(order.status)"
               >
-                <td class="border border-modal p-1 w-14">
+                <td
+                  class="border border-modal p-1 w-14"
+                  v-bind:class="textSide(order.side)"
+                >
                   {{ order.side }}
                 </td>
                 <td class="border border-modal p-1 w-14">
@@ -180,7 +233,7 @@ const isActive = (status: OrderStatus) => {
                 </td>
                 <td class="border border-modal p-1 w-14">{{ order.price }}</td>
                 <td class="border border-modal p-1 w-14">
-                  {{ order.status }}
+                  {{ order.market.split("-")[0] }}
                 </td>
                 <td class="border border-modal px-4 py-0.5 w-14">
                   <button
@@ -194,8 +247,15 @@ const isActive = (status: OrderStatus) => {
             </tbody>
           </table>
         </div>
-        <div v-else class="text-sm pl-1">none</div>
+        <!-- <div v-else class="text-sm pl-1">none</div> -->
       </template>
     </AppAccordion>
   </div>
 </template>
+
+<style scoped>
+.h-tbody {
+  height: 100px;
+  max-height: 100px;
+}
+</style>
