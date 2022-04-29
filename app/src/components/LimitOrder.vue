@@ -249,14 +249,14 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
         <div class="pb-4 pt-2 flex justify-between">
           <button
             @click="limitSell"
-            class="bg-modal-container font-semibold py-3 px-8 border border-sell text-sell rounded"
+            class="bg-modal-container hover:opacity-50 active:border-none font-semibold py-3 px-8 border border-sell text-sell rounded"
             :disabled="buttonDisabled.sell"
           >
             Limit Sell
           </button>
           <button
             @click="limitBuy"
-            class="bg-modal-container font-semibold py-3 px-8 border border-buy text-buy rounded"
+            class="bg-modal-container hover:opacity-50 active:border-none font-semibold py-3 px-8 border border-buy text-buy rounded"
             :disabled="buttonDisabled.buy"
           >
             Limit Buy
