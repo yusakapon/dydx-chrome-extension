@@ -166,8 +166,8 @@ const textSideString = (side: string) => {
               </tr>
             </thead>
             <tbody class="block h-position-tbody">
-              <tr v-show="positionCount === 0">
-                <td class="pl-3.5">no positions</td>
+              <tr v-show="positionCount === 0" class="bg-modal-container">
+                <td class="p-1 w-72">no positions</td>
               </tr>
               <tr
                 class="bg-modal-container"
@@ -215,8 +215,8 @@ const textSideString = (side: string) => {
               </tr>
             </thead>
             <tbody class="overflow-y-scroll h-order-tbody block">
-              <tr v-show="orderCount === 0">
-                <td class="pl-3.5">no orders</td>
+              <tr v-show="orderCount === 0" class="bg-modal-container">
+                <td class="p-1 w-72">no orders</td>
               </tr>
               <tr
                 class="bg-modal-container"
