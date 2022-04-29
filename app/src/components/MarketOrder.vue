@@ -157,14 +157,14 @@ const marketOrder = async (orderSide: OrderSide) => {
         <div class="pb-4 pt-2 flex justify-between">
           <button
             @click="marketSell"
-            class="bg-modal-container font-semibold py-3 px-6 border border-sell text-sell rounded"
+            class="bg-modal-container hover:opacity-50 active:border-none font-semibold py-3 px-6 border border-sell text-sell rounded"
             :disabled="buttonDisabled.sell"
           >
             Market Sell
           </button>
           <button
             @click="marketBuy"
-            class="bg-modal-container font-semibold py-3 px-6 border border-buy text-buy rounded"
+            class="bg-modal-container hover:opacity-50 active:border-none font-semibold py-3 px-6 border border-buy text-buy rounded"
             :disabled="buttonDisabled.buy"
           >
             Market Buy

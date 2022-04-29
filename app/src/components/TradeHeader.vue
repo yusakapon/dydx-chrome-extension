@@ -7,7 +7,16 @@ const store = useStore();
 
 const selectedPairs = ref<string>("");
 const currencyPairs = computed(() => {
-  return Market;
+  const marketInfoAll = store.getters["market/marketInfoAll"];
+  const marketsFromApi = marketInfoAll ? Object.keys(marketInfoAll) : [];
+  const marketsKey = Object.keys(Market).filter((key) =>
+    marketsFromApi.includes(Market[key as keyof typeof Market])
+  );
+  const pairObj: any = {};
+  marketsKey.forEach((key) => {
+    pairObj[key] = Market[key as keyof typeof Market];
+  });
+  return pairObj;
 });
 const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
 const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
