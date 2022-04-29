@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineEmits } from "vue";
+import { ref, defineEmits, onMounted } from "vue";
 import { useStore } from "@/store";
 
 const store = useStore();
@@ -19,6 +19,12 @@ const connectWallet = async () => {
     errorMsg.value = store.getters.errorMsg;
   }
 };
+
+onMounted(() => {
+  if (store.getters["apiKey"]) {
+    connectWallet();
+  }
+});
 </script>
 
 <template>

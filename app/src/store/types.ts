@@ -32,6 +32,7 @@ export interface RootState {
   ethAddress: string;
   client?: DydxClient;
   account?: AccountResponseObject;
+  apiKey?: any;
   errorMsg: string;
 }
 

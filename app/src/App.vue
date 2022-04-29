@@ -6,6 +6,7 @@ import MarketOrder from "./components/MarketOrder.vue";
 import TradeHeader from "./components/TradeHeader.vue";
 import TradeInfo from "./components/TradeInfo.vue";
 import ConnectWallet from "./components/ConnetWallet.vue";
+import DisplayAddress from "./components/DisplayAddress.vue";
 
 const isConnected = ref<boolean>(false);
 const currencyPairSelected = ref<string>();
@@ -99,6 +100,9 @@ const currencyPair = (pair: string) => {
       <span class="text-lg font-bold">dYdX Trade Support Extension</span>
     </div>
     <div class="modal-content" v-if="isConnected">
+      <div class="border-b border-solid border-white">
+        <DisplayAddress @is-connected="connectStatus" />
+      </div>
       <div class="border-b border-solid border-white">
         <TradeHeader @currency-pair="currencyPair" />
       </div>
