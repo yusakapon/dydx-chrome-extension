@@ -155,7 +155,7 @@ const textSideString = (side: string) => {
       </template>
       <template v-slot:content>
         <div class="text-sm">Position</div>
-        <div v-if="positionCount" class="text-sm">
+        <div class="text-sm">
           <table class="text-center w-full">
             <thead class="block">
               <tr>
@@ -165,7 +165,10 @@ const textSideString = (side: string) => {
                 <th class="w-14 p-1">PL</th>
               </tr>
             </thead>
-            <tbody class="block">
+            <tbody class="block h-position-tbody">
+              <tr v-show="positionCount === 0">
+                <td class="pl-3.5">no positions</td>
+              </tr>
               <tr
                 class="bg-modal-container"
                 v-for="position in positionArray"
@@ -190,12 +193,11 @@ const textSideString = (side: string) => {
             </tbody>
           </table>
         </div>
-        <div v-else class="text-sm pl-1">none</div>
-        <div class="text-sm">
+        <div class="text-sm p-1 my-1">
           <span>Order</span>
           <button
             v-show="orderCount > 0"
-            class="float-right bg-modal-container p-1 rounded mt-1"
+            class="float-right bg-modal-container p-1 rounded"
             @click="cancelAllOrders"
           >
             Cancel All
@@ -212,7 +214,7 @@ const textSideString = (side: string) => {
                 <th class="w-14 p-1">Cancel</th>
               </tr>
             </thead>
-            <tbody class="overflow-y-scroll h-tbody block">
+            <tbody class="overflow-y-scroll h-order-tbody block">
               <tr v-show="orderCount === 0">
                 <td class="pl-3.5">no orders</td>
               </tr>
@@ -247,14 +249,17 @@ const textSideString = (side: string) => {
             </tbody>
           </table>
         </div>
-        <!-- <div v-else class="text-sm pl-1">none</div> -->
       </template>
     </AppAccordion>
   </div>
 </template>
 
 <style scoped>
-.h-tbody {
+.h-position-tbody {
+  height: 28px;
+  max-height: 28px;
+}
+.h-order-tbody {
   height: 100px;
   max-height: 100px;
 }
