@@ -46,7 +46,7 @@ export const store = createStore<RootState>({
       return state.account;
     },
     apiKey: (state) => {
-      return CircularJSON.parse(state.apiKey);
+      return state.apiKey ? CircularJSON.parse(state.apiKey) : undefined;
     },
     errorMsg: (state) => {
       return state.errorMsg;
