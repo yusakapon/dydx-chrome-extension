@@ -1,6 +1,7 @@
 import { InjectionKey } from "vue";
 import { createStore, useStore as baseUseStore, Store } from "vuex";
 import createPersistedState from "vuex-persistedstate";
+import CircularJSON from "circular-json";
 import Web3 from "web3";
 import { DydxClient, Market, SigningMethod } from "@dydxprotocol/v3-client";
 import {
@@ -31,6 +32,7 @@ export const store = createStore<RootState>({
     ethAddress: "",
     client: undefined,
     account: undefined,
+    apiKey: undefined,
     errorMsg: "",
   },
   getters: {
@@ -42,6 +44,9 @@ export const store = createStore<RootState>({
     },
     account: (state) => {
       return state.account;
+    },
+    apiKey: (state) => {
+      return state.apiKey ? CircularJSON.parse(state.apiKey) : undefined;
     },
     errorMsg: (state) => {
       return state.errorMsg;
@@ -65,90 +70,125 @@ export const store = createStore<RootState>({
     SET_ACCOUNT(state, account) {
       state.account = account;
     },
+    SET_API_KEY(state, apiKey) {
+      state.apiKey = apiKey;
+    },
+    DELETE_API_KEY(state) {
+      state.apiKey = undefined;
+    },
     SET_ERROR_MSG(state, msg) {
       state.errorMsg = msg;
     },
   },
   actions: {
-    async initClient({ commit, dispatch, state }) {
+    async initClient({ commit, dispatch, getters, state }) {
       console.log("initClient");
 
       commit("SET_HOST");
 
       if (window.ethereum) {
-        await window.ethereum.enable();
-        const ethereum = { ...window.ethereum };
-        const web3 = new Web3(ethereum);
+        if (!state.apiKey) {
+          await window.ethereum.enable();
+          const ethereum = { ...window.ethereum };
+          const web3 = new Web3(ethereum);
 
-        // eth address set
-        const address = ethereum.selectedAddress;
-        const networkId = parseInt(ethereum.chainId, 16);
+          // eth address set
+          const address = ethereum.selectedAddress;
+          const networkId = parseInt(ethereum.chainId, 16);
 
-        if (
-          state.host === API_HOST.PRODUCTION &&
-          networkId !== NETWORK_ID.PRODUCTION
-        ) {
-          console.error("Please select the ethereum mainnet in the MetaMask");
-          commit(
-            "SET_ERROR_MSG",
-            "Please select the ethereum mainnet in the MetaMask"
-          );
-          return false;
-        } else if (
-          state.host === API_HOST.STAGING &&
-          networkId !== NETWORK_ID.STAGING
-        ) {
-          console.error("Please select the Ropsten testnet in the MetaMask");
-          commit(
-            "SET_ERROR_MSG",
-            "Please select the Ropsten testnet in the MetaMask"
-          );
-          return false;
-        }
-
-        // dydx client set
-        // TODO @ts-ignore because the dependent web3 library for v3-client is out of date
-        const clientByWeb3 = new DydxClient(state.host, {
-          // @ts-ignore
-          web3,
-          networkId,
-        });
-
-        // signature & api key set
-        try {
-          const starkPrivateKey = await clientByWeb3.onboarding.deriveStarkKey(
-            address,
-            SigningMethod.MetaMask
-          );
-          const apiKeyCredentials =
-            await clientByWeb3.onboarding.recoverDefaultApiCredentials(
-              address,
-              SigningMethod.MetaMask
+          if (
+            state.host === API_HOST.PRODUCTION &&
+            networkId !== NETWORK_ID.PRODUCTION
+          ) {
+            console.error("Please select the ethereum mainnet in the MetaMask");
+            commit(
+              "SET_ERROR_MSG",
+              "Please select the ethereum mainnet in the MetaMask"
             );
+            return false;
+          } else if (
+            state.host === API_HOST.STAGING &&
+            networkId !== NETWORK_ID.STAGING
+          ) {
+            console.error("Please select the Ropsten testnet in the MetaMask");
+            commit(
+              "SET_ERROR_MSG",
+              "Please select the Ropsten testnet in the MetaMask"
+            );
+            return false;
+          }
 
-          if (!apiKeyCredentials || !starkPrivateKey) return;
-          const clientByApiKey = new DydxClient(state.host, {
-            apiKeyCredentials,
-            starkPrivateKey,
+          // dydx client set
+          // TODO @ts-ignore because the dependent web3 library for v3-client is out of date
+          const clientByWeb3 = new DydxClient(state.host, {
+            // @ts-ignore
+            web3,
             networkId,
           });
 
-          const { account } = await clientByApiKey.private.getAccount(address);
+          // signature & api key set
+          try {
+            const starkPrivateKey =
+              await clientByWeb3.onboarding.deriveStarkKey(
+                address,
+                SigningMethod.MetaMask
+              );
+            const apiKeyCredentials =
+              await clientByWeb3.onboarding.recoverDefaultApiCredentials(
+                address,
+                SigningMethod.MetaMask
+              );
 
-          commit("SET_ETH_ADDRESS", address);
-          commit("SET_CLIENT", clientByApiKey);
-          commit("SET_ACCOUNT", account);
+            if (!apiKeyCredentials || !starkPrivateKey) return;
+            const apiKey = {
+              apiKeyCredentials,
+              starkPrivateKey,
+              networkId,
+            };
+            const clientByApiKey = new DydxClient(state.host, apiKey);
 
-          // order and position ws
-          await dispatch("account/init");
-          // market info ws
-          await dispatch("market/init");
-          // setting info
-          await dispatch("setting/init");
-        } catch (error) {
-          console.log(error);
-          commit("SET_ERROR_MSG", "Please install MetaMask");
-          return false;
+            const { account } = await clientByApiKey.private.getAccount(
+              address
+            );
+
+            commit("SET_ETH_ADDRESS", address);
+            commit("SET_CLIENT", clientByApiKey);
+            commit("SET_ACCOUNT", account);
+
+            // order and position ws
+            await dispatch("account/init");
+            // market info ws
+            await dispatch("market/init");
+            // setting info
+            await dispatch("setting/init");
+
+            commit("SET_API_KEY", CircularJSON.stringify(apiKey));
+          } catch (error) {
+            console.log(error);
+            commit("SET_ERROR_MSG", "Please install MetaMask");
+            return false;
+          }
+        } else {
+          try {
+            const clientByApiKey = new DydxClient(state.host, getters.apiKey);
+
+            const { account } = await clientByApiKey.private.getAccount(
+              state.ethAddress
+            );
+            commit("SET_CLIENT", clientByApiKey);
+            commit("SET_ACCOUNT", account);
+
+            // order and position ws
+            await dispatch("account/init");
+            // market info ws
+            await dispatch("market/init");
+            // setting info
+            await dispatch("setting/init");
+          } catch (error) {
+            console.log(error);
+            commit("SET_ERROR_MSG", "Authentication failed");
+            return false;
+          }
         }
       } else {
         commit("SET_ERROR_MSG", "Authentication failed");
@@ -173,6 +213,10 @@ export const store = createStore<RootState>({
         return false;
       }
     },
+    logout({ commit, dispatch, state }) {
+      console.log("logout");
+      commit("DELETE_API_KEY");
+    },
   },
   modules: {
     market: MarketsStoreModule,
@@ -182,6 +226,11 @@ export const store = createStore<RootState>({
     setting: SettingStoreModule,
   },
   plugins: [
+    createPersistedState({
+      key: "dydx-extension-apikey",
+      paths: ["ethAddress", "apiKey"],
+      storage: window.sessionStorage,
+    }),
     createPersistedState({
       key: "dydx-extension-setting",
       paths: ["setting"],
