@@ -14,6 +14,8 @@ const props = defineProps({
 });
 watch(props, (props) => {
   market.value = props.currencyPair as keyof typeof Market;
+  const point = store.getters["market/priceDicimalPoint"](Market[market.value]);
+  priceDicimalPoint.value = point;
   saveOrders();
 });
 
@@ -23,33 +25,38 @@ type position = {
   size: number;
   price: number;
   pl: number;
+  market: Market;
 };
 const positionArray = ref<Array<position>>([]);
 const positionCount = computed(() => {
   return positionArray.value.length;
 });
+const priceDicimalPoint = ref<number>();
 
 watch(positions, (positions) => {
   positionArray.value = [];
   if (market.value) {
     const element = positions[Market[market.value]];
-    if (element) {
+    if (element && priceDicimalPoint.value !== undefined) {
       const short = element["SHORT"];
       const long = element["LONG"];
+      const point = 10 ** priceDicimalPoint.value;
       if (short) {
         const position: position = {
           side: short.side,
           size: -short.size,
-          price: short.entryPrice,
+          price: Math.round(short.entryPrice * point) / point,
           pl: short.unrealizedPnl,
+          market: short.market,
         };
         positionArray.value.push(position);
       } else if (long) {
         const position: position = {
           side: long.side,
           size: long.size,
-          price: long.entryPrice,
+          price: Math.round(long.entryPrice * 10 ** point) / point,
           pl: long.unrealizedPnl,
+          market: short.market,
         };
         positionArray.value.push(position);
       }
@@ -159,9 +166,10 @@ const textSideString = (side: string) => {
           <table class="text-center w-full">
             <thead class="block">
               <tr>
+                <th class="w-14 p-1">Market</th>
                 <th class="w-14 p-1">Side</th>
                 <th class="w-14 p-1">Size</th>
-                <th class="w-28 p-1">Price</th>
+                <th class="w-14 p-1">Price</th>
                 <th class="w-14 p-1">PL</th>
               </tr>
             </thead>
@@ -174,6 +182,9 @@ const textSideString = (side: string) => {
                 v-for="position in positionArray"
                 v-bind:key="position.side"
               >
+                <td class="border border-modal p-1 w-14">
+                  {{ position.market.split("-")[0] }}
+                </td>
                 <td
                   class="border border-modal p-1 w-14"
                   v-bind:class="textSideString(position.side)"
@@ -183,7 +194,7 @@ const textSideString = (side: string) => {
                 <td class="border border-modal p-1 w-14">
                   {{ position.size }}
                 </td>
-                <td class="border border-modal p-1 w-28">
+                <td class="border border-modal p-1 w-14">
                   {{ position.price }}
                 </td>
                 <td class="border border-modal p-1 w-14">
@@ -207,10 +218,10 @@ const textSideString = (side: string) => {
           <table class="text-center w-full">
             <thead class="block">
               <tr>
+                <th class="w-14 p-1">Market</th>
                 <th class="w-14 p-1">Side</th>
                 <th class="w-14 p-1">Size</th>
                 <th class="w-14 p-1">Price</th>
-                <th class="w-14 p-1">Market</th>
                 <th class="w-14 p-1">Cancel</th>
               </tr>
             </thead>
@@ -224,6 +235,9 @@ const textSideString = (side: string) => {
                 v-bind:key="order.id"
                 v-bind:class="isActive(order.status)"
               >
+                <td class="border border-modal p-1 w-14">
+                  {{ order.market.split("-")[0] }}
+                </td>
                 <td
                   class="border border-modal p-1 w-14"
                   v-bind:class="textSide(order.side)"
@@ -234,9 +248,6 @@ const textSideString = (side: string) => {
                   {{ order.amount }}
                 </td>
                 <td class="border border-modal p-1 w-14">{{ order.price }}</td>
-                <td class="border border-modal p-1 w-14">
-                  {{ order.market.split("-")[0] }}
-                </td>
                 <td class="border border-modal px-4 py-0.5 w-14">
                   <button
                     class="w-full h-full hover:bg-modal-selected"
