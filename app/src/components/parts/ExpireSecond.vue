@@ -3,25 +3,51 @@ import { ref, defineEmits, watch } from "vue";
 
 const emit = defineEmits(["expireSecond"]);
 
-const expireSecond = ref<number>(2592000);
-const isExpireSecondOpen = ref<boolean>(false);
-const toggleExpireSecond = () => {
-  isExpireSecondOpen.value = !isExpireSecondOpen.value;
+const expiration = ref<number>(1);
+const expireSecond = ref<number>(1);
+const isExpirationOpen = ref<boolean>(false);
+const toggleExpiration = () => {
+  isExpirationOpen.value = !isExpirationOpen.value;
 };
 
-const countDownExpireSecond = () => {
-  if (expireSecond.value > 15) {
-    expireSecond.value -= 1;
+const countDownExpiration = () => {
+  if (expiration.value > 1) {
+    expiration.value -= 1;
   }
 };
-
-const countUpExpireSecond = () => {
-  expireSecond.value += 1;
+const countUpExpiration = () => {
+  expiration.value += 1;
 };
 
-watch(expireSecond, (second) => {
-  expireSecond.value = second;
-  emit("expireSecond", expireSecond);
+watch(expiration, (second) => {
+  expiration.value = second;
+  const selected = dateUnit.find(
+    (element) => element.key === selectedUnit.value
+  );
+  if (selected) {
+    expireSecond.value = expiration.value * selected.value;
+    emit("expireSecond", expireSecond.value);
+  }
+});
+
+const dateUnit = [
+  { key: "second", value: 1 },
+  { key: "minute", value: 60 },
+  { key: "hour", value: 3600 },
+  { key: "day", value: 86400 },
+  { key: "month", value: 2592000 },
+];
+
+const selectedUnit = ref<string>("month");
+
+watch(selectedUnit, () => {
+  const selected = dateUnit.find(
+    (element) => element.key === selectedUnit.value
+  );
+  if (selected) {
+    expireSecond.value = expiration.value * selected.value;
+    emit("expireSecond", expireSecond.value);
+  }
 });
 </script>
 
@@ -29,15 +55,15 @@ watch(expireSecond, (second) => {
   <div class="mt-2">
     <button
       class="text-sm"
-      @click="toggleExpireSecond"
-      :aria-expanded="isExpireSecondOpen"
+      @click="toggleExpiration"
+      :aria-expanded="isExpirationOpen"
     >
-      ExpireSecond
+      Expiration
       <svg
         class="w-3 ml-1 transition-all duration-200 transform inline"
         :class="{
-          'rotate-180': isExpireSecondOpen,
-          'rotate-0': !isExpireSecondOpen,
+          'rotate-180': isExpirationOpen,
+          'rotate-0': !isExpirationOpen,
         }"
         fill="none"
         stroke="currentColor"
@@ -55,12 +81,12 @@ watch(expireSecond, (second) => {
     </button>
   </div>
   <div
-    v-show="isExpireSecondOpen"
+    v-show="isExpirationOpen"
     class="inline-flex w-full text-sm my-1 transition-all duration-200"
   >
     <button
-      class="active:opacity-50 py-2 pl-2 pr-1 ml-1 bg-modal-container rounded-l"
-      @click="countDownExpireSecond"
+      class="active:opacity-50 py-1 pl-2 pr-1 bg-modal-container rounded-l"
+      @click="countDownExpiration"
     >
       <fa icon="minus"></fa>
     </button>
@@ -68,15 +94,25 @@ watch(expireSecond, (second) => {
       type="number"
       min="15"
       :step="1"
-      class="w-20 py-2 bg-modal-container text-center no-count border border-modal"
-      v-model="expireSecond"
+      class="w-8 py-1 bg-modal-container text-center no-count border border-modal"
+      v-model="expiration"
     />
     <button
-      class="active:opacity-50 py-2 pl-1 pr-2 bg-modal-container rounded-r"
-      @click="countUpExpireSecond"
+      class="active:opacity-50 py-1 pl-1 pr-2 bg-modal-container rounded-r"
+      @click="countUpExpiration"
     >
       <fa icon="plus"></fa>
     </button>
+    <div class="inline ml-1">
+      <select
+        class="bg-modal-container py-2 px-2 rounded"
+        v-model="selectedUnit"
+      >
+        <option v-for="date in dateUnit" :key="date.key" :value="date.key">
+          {{ date.key }}
+        </option>
+      </select>
+    </div>
   </div>
 </template>
 <style scoped>
