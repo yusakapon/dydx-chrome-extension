@@ -81,28 +81,31 @@ const countArgAmount = (argStep: number) => {
 </script>
 
 <template>
-  <button @click="countDownAmount()">
-    <fa icon="caret-left"></fa>
+  <button class="active:opacity-50 py-2 pl-2 pr-1" @click="countDownAmount()">
+    <fa icon="angle-left"></fa>
   </button>
   <button
-    class="bg-modal-container w-12 py-2 rounded-l text-sm"
+    class="bg-modal-container w-12 py-2 rounded-l text-sm active:opacity-50"
     @click="countArgAmount(stepButton.firstLevel)"
   >
     +{{ stepButton.firstLevel }}
   </button>
   <button
-    class="bg-modal-container w-12 py-2 border-r border-l border-modal text-sm"
+    class="bg-modal-container w-12 py-2 border-r border-l border-modal text-sm active:opacity-50"
     @click="countArgAmount(stepButton.secondLevel)"
   >
     +{{ stepButton.secondLevel }}
   </button>
   <button
-    class="bg-modal-container w-12 py-2 rounded-r text-sm"
+    class="bg-modal-container w-12 py-2 rounded-r text-sm active:opacity-50"
     @click="countArgAmount(stepButton.thirdLevel)"
   >
     +{{ stepButton.thirdLevel }}
   </button>
-  <button class="mr-1" @click="countUpAmount()">
-    <fa icon="caret-right"></fa>
+  <button
+    class="mr-1 active:opacity-50 py-2 pl-1 pr-2"
+    @click="countUpAmount()"
+  >
+    <fa icon="angle-right"></fa>
   </button>
 </template>

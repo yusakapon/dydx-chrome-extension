@@ -24,7 +24,7 @@ const setClose = () => {
 
 <template>
   <button
-    class="bg-modal-container w-12 py-2 rounded text-sm"
+    class="bg-modal-container p-2 rounded text-sm active:opacity-50"
     @click="setClose()"
   >
     Close
