@@ -210,9 +210,11 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
               class="w-1/2 px-2 py-2 bg-modal-container rounded"
               v-model="price"
             />
-            <span class="ml-2 px-1 text-sm">step</span>
-            <button @click="countDownStep">
-              <fa icon="caret-left"></fa>
+            <button
+              class="active:opacity-50 py-2 pl-2 pr-1 ml-1 bg-modal-container rounded-l"
+              @click="countDownStep"
+            >
+              <fa icon="minus"></fa>
             </button>
             <input
               type="number"
@@ -220,11 +222,14 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
               max="10000"
               :step="1"
               readonly
-              class="w-12 px-2 py-2 bg-modal-container rounded text-center no-count"
+              class="w-12 px-2 py-2 bg-modal-container text-center no-count border border-modal"
               v-model="priceStep"
             />
-            <button class="mr-1" @click="countUpStep">
-              <fa icon="caret-right"></fa>
+            <button
+              class="active:opacity-50 py-2 pl-1 pr-2 bg-modal-container rounded-r"
+              @click="countUpStep"
+            >
+              <fa icon="plus"></fa>
             </button>
           </div>
         </div>
