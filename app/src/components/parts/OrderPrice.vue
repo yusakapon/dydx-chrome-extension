@@ -94,8 +94,8 @@ const setArgPrice = (argPrice: number) => {
         Self
       </div>
     </label>
-    <button @click="countDownPrice()" class="ml-2">
-      <fa icon="caret-left"></fa>
+    <button @click="countDownPrice()" class="active:opacity-50 py-2 pl-2 pr-1">
+      <fa icon="angle-left"></fa>
     </button>
     <label>
       <input
@@ -153,8 +153,8 @@ const setArgPrice = (argPrice: number) => {
         ±{{ stepButton.fourthLevel }}
       </div>
     </label>
-    <button @click="countUpPrice()">
-      <fa icon="caret-right"></fa>
+    <button class="active:opacity-50 py-2 pl-1 pr-2" @click="countUpPrice()">
+      <fa icon="angle-right"></fa>
     </button>
   </div>
 </template>

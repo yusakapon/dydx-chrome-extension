@@ -4,7 +4,6 @@ import { useStore } from "@/store";
 import { Market, OrderSide } from "@dydxprotocol/v3-client";
 import AppAccordion from "./parts/AppAccordion.vue";
 import AmountSelector from "./parts/AmountSelector.vue";
-import AmountLeverage from "./parts/AmountLeverage.vue";
 import AmountClose from "./parts/AmountClose.vue";
 
 const orderType = "market";
@@ -62,10 +61,6 @@ const countUpAmount = (argStep: number) => {
   }
 };
 
-const setLeverage = (leverage: number) => {
-  console.log(leverage);
-};
-
 const setClose = () => {
   const key = (currencyPair.crypto +
     "_" +
@@ -76,11 +71,9 @@ const setClose = () => {
   if (short) {
     const size = short.size;
     amount.value = -size;
-    // buttonDisabled.sell = true;
   } else if (long) {
     const size = long.size;
     amount.value = size;
-    // buttonDisabled.buy = true;
   }
 };
 
@@ -127,12 +120,11 @@ const marketOrder = async (orderSide: OrderSide) => {
             :order-type="orderType"
             @step="countUpAmount"
           />
-          <AmountLeverage
+          <AmountClose
+            class="ml-3.5"
             :currency-pair="currencyPair"
-            :order-type="orderType"
-            @leverage="setLeverage"
+            @close="setClose"
           />
-          <AmountClose :currency-pair="currencyPair" @close="setClose" />
         </div>
         <div class="pt-1 pb-2 flex items-center justify-center w-full">
           <span class="px-1 text-sm">{{ currencyPair.crypto }}</span>

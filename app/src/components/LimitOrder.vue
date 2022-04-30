@@ -4,7 +4,6 @@ import { useStore } from "@/store";
 import { Market, OrderSide, TimeInForce } from "@dydxprotocol/v3-client";
 import AppAccordion from "./parts/AppAccordion.vue";
 import AmountSelector from "./parts/AmountSelector.vue";
-import AmountLeverage from "./parts/AmountLeverage.vue";
 import AmountClose from "./parts/AmountClose.vue";
 import OrderPrice from "./parts/OrderPrice.vue";
 
@@ -72,10 +71,6 @@ const countUpAmount = (argStep: number) => {
   }
 };
 
-const setLeverage = (leverage: number) => {
-  console.log(leverage);
-};
-
 const setClose = () => {
   const key = (currencyPair.crypto +
     "_" +
@@ -86,11 +81,9 @@ const setClose = () => {
   if (short) {
     const size = short.size;
     amount.value = -size;
-    // buttonDisabled.sell = true;
   } else if (long) {
     const size = long.size;
     amount.value = size;
-    // buttonDisabled.buy = true;
   }
 };
 
@@ -172,12 +165,11 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
             :order-type="orderType"
             @step="countUpAmount"
           />
-          <AmountLeverage
+          <AmountClose
+            class="ml-3.5"
             :currency-pair="currencyPair"
-            :order-type="orderType"
-            @leverage="setLeverage"
+            @close="setClose"
           />
-          <AmountClose :currency-pair="currencyPair" @close="setClose" />
         </div>
         <div class="pt-1 pb-2 flex items-center justify-center w-full">
           <span class="px-1 text-sm">{{ currencyPair.crypto }}</span>
@@ -218,9 +210,11 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
               class="w-1/2 px-2 py-2 bg-modal-container rounded"
               v-model="price"
             />
-            <span class="ml-2 px-1 text-sm">step</span>
-            <button @click="countDownStep">
-              <fa icon="caret-left"></fa>
+            <button
+              class="active:opacity-50 py-2 pl-2 pr-1 ml-1 bg-modal-container rounded-l"
+              @click="countDownStep"
+            >
+              <fa icon="minus"></fa>
             </button>
             <input
               type="number"
@@ -228,11 +222,14 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
               max="10000"
               :step="1"
               readonly
-              class="w-12 px-2 py-2 bg-modal-container rounded text-center no-count"
+              class="w-12 px-2 py-2 bg-modal-container text-center no-count border border-modal"
               v-model="priceStep"
             />
-            <button class="mr-1" @click="countUpStep">
-              <fa icon="caret-right"></fa>
+            <button
+              class="active:opacity-50 py-2 pl-1 pr-2 bg-modal-container rounded-r"
+              @click="countUpStep"
+            >
+              <fa icon="plus"></fa>
             </button>
           </div>
         </div>
