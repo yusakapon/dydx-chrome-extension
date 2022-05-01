@@ -12,7 +12,7 @@ const toggleExpiration = () => {
 
 const countDownExpiration = () => {
   if (selectedUnit.value === "second") {
-    if (expiration.value > 61) {
+    if (expiration.value > 60) {
       expiration.value -= 1;
     }
   } else if (selectedUnit.value === "minute") {
@@ -56,7 +56,7 @@ watch(selectedUnit, () => {
   );
   if (selected) {
     if (selected.key === "second") {
-      expiration.value = 61;
+      expiration.value = 60;
     } else if (selected.key === "minute") {
       expiration.value = 2;
     } else {
