@@ -6,6 +6,7 @@ import AppAccordion from "./parts/AppAccordion.vue";
 import AmountSelector from "./parts/AmountSelector.vue";
 import AmountClose from "./parts/AmountClose.vue";
 import OrderPrice from "./parts/OrderPrice.vue";
+import ExpireSecond from "./parts/ExpireSecond.vue";
 
 const orderType = "limit";
 const store = useStore();
@@ -19,10 +20,6 @@ const step = ref<number>(0.01);
 const usd = ref<number>(0);
 const currencyPair = reactive({ crypto: "", currency: "" });
 const positions = computed(() => store.getters["account/positions"]);
-const buttonDisabled = reactive({
-  sell: false as boolean,
-  buy: false as boolean,
-});
 
 const price = ref<number>(0);
 const setPrice = ref<number>(0);
@@ -30,6 +27,8 @@ const priceStep = ref<number>(1);
 const isPriceShow = ref<boolean>(true);
 
 const postOnly = ref<boolean>(false);
+
+const expireSecond = ref<number>(2592000);
 
 const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
 const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
@@ -48,8 +47,6 @@ watch(props, (props) => {
 
 watch(amount, () => {
   usd.value = Math.round(amount.value * midPrice.value * 1000) / 1000;
-  buttonDisabled.sell = false;
-  buttonDisabled.buy = false;
 });
 
 watch(usd, () => {
@@ -112,6 +109,10 @@ const countUpStep = () => {
   }
 };
 
+const setExpireSecond = (setExpireSecond: number) => {
+  expireSecond.value = setExpireSecond;
+};
+
 const limitBuy = () => {
   const side = OrderSide.BUY;
   const price = isPriceShow.value
@@ -140,7 +141,7 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
       price: price,
       postOnly: postOnly.value,
       timeInForce: TimeInForce.GTT,
-      expireSecond: 100,
+      expireSecond: expireSecond.value,
     });
     console.log(result);
   } catch (error) {
@@ -222,7 +223,7 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
               max="10000"
               :step="1"
               readonly
-              class="w-12 px-2 py-2 bg-modal-container text-center no-count border border-modal"
+              class="w-12 py-2 bg-modal-container text-center no-count border border-modal"
               v-model="priceStep"
             />
             <button
@@ -243,18 +244,17 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
           />
           <label for="post-only" class="text-sm ml-1">Post Only</label>
         </div>
+        <ExpireSecond @expireSecond="setExpireSecond" />
         <div class="pb-4 pt-2 flex justify-between">
           <button
             @click="limitSell"
             class="bg-modal-container hover:opacity-50 active:border-none font-semibold py-3 px-8 border border-sell text-sell rounded"
-            :disabled="buttonDisabled.sell"
           >
             Limit Sell
           </button>
           <button
             @click="limitBuy"
             class="bg-modal-container hover:opacity-50 active:border-none font-semibold py-3 px-8 border border-buy text-buy rounded"
-            :disabled="buttonDisabled.buy"
           >
             Limit Buy
           </button>
