@@ -114,18 +114,18 @@ const countUpStep = () => {
 
 const limitBuy = () => {
   const side = OrderSide.BUY;
-  const price = isPriceShow.value
-    ? priceStep.value
+  const priceSet = isPriceShow.value
+    ? price.value
     : midPrice.value - setPrice.value;
-  marketOrder(side, price);
+  marketOrder(side, priceSet);
 };
 
 const limitSell = () => {
   const side = OrderSide.SELL;
-  const price = isPriceShow.value
-    ? priceStep.value
+  const priceSet = isPriceShow.value
+    ? price.value
     : midPrice.value + setPrice.value;
-  marketOrder(side, price);
+  marketOrder(side, priceSet);
 };
 
 const marketOrder = async (orderSide: OrderSide, price: number) => {
