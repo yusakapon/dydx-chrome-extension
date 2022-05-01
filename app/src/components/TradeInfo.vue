@@ -14,8 +14,7 @@ const props = defineProps({
 });
 watch(props, (props) => {
   market.value = props.currencyPair as keyof typeof Market;
-  const point = store.getters["market/priceDicimalPoint"](Market[market.value]);
-  priceDicimalPoint.value = point;
+  savePositions(positions);
   saveOrders();
 });
 
@@ -31,38 +30,53 @@ const positionArray = ref<Array<position>>([]);
 const positionCount = computed(() => {
   return positionArray.value.length;
 });
-const priceDicimalPoint = ref<number>();
+
+const isDisplayAllMarkets = ref<boolean>(true);
+watch(isDisplayAllMarkets, () => {
+  savePositions(positions);
+  saveOrders();
+});
 
 watch(positions, (positions) => {
+  savePositions(positions);
+});
+const savePositions = (positions: { [x: string]: any }) => {
   positionArray.value = [];
-  if (market.value) {
-    const element = positions[Market[market.value]];
-    if (element && priceDicimalPoint.value !== undefined) {
-      const short = element["SHORT"];
-      const long = element["LONG"];
-      const point = 10 ** priceDicimalPoint.value;
-      if (short) {
-        const position: position = {
-          side: short.side,
-          size: -short.size,
-          price: Math.round(short.entryPrice * point) / point,
-          pl: short.unrealizedPnl,
-          market: short.market,
-        };
-        positionArray.value.push(position);
-      } else if (long) {
-        const position: position = {
-          side: long.side,
-          size: long.size,
-          price: Math.round(long.entryPrice * 10 ** point) / point,
-          pl: long.unrealizedPnl,
-          market: short.market,
-        };
-        positionArray.value.push(position);
+  Object.keys(positions).forEach((symbol) => {
+    if (
+      isDisplayAllMarkets.value ||
+      (market.value && symbol === Market[market.value])
+    ) {
+      const element = positions[symbol];
+      const priceDicimalPoint =
+        store.getters["market/priceDicimalPoint"](symbol);
+      if (element && priceDicimalPoint !== undefined) {
+        const short = element["SHORT"];
+        const long = element["LONG"];
+        const point = 10 ** priceDicimalPoint;
+        if (short) {
+          const position: position = {
+            side: short.side,
+            size: -short.size,
+            price: Math.round(short.entryPrice * point) / point,
+            pl: short.unrealizedPnl,
+            market: short.market,
+          };
+          positionArray.value.push(position);
+        } else if (long) {
+          const position: position = {
+            side: long.side,
+            size: long.size,
+            price: Math.round(long.entryPrice * 10 ** point) / point,
+            pl: long.unrealizedPnl,
+            market: short.market,
+          };
+          positionArray.value.push(position);
+        }
       }
     }
-  }
-});
+  });
+};
 
 // order
 type order = {
@@ -87,7 +101,10 @@ const saveOrders = () => {
   for (const key in orders.value) {
     if (Object.prototype.hasOwnProperty.call(orders.value, key)) {
       const element = orders.value[key];
-      if (market.value && element.market === Market[market.value]) {
+      if (
+        isDisplayAllMarkets.value ||
+        (market.value && element.market === Market[market.value])
+      ) {
         const order: order = {
           id: element.id,
           price: element.price,
@@ -161,7 +178,19 @@ const textSideString = (side: string) => {
         <span>Trade Info</span>
       </template>
       <template v-slot:content>
-        <div class="text-sm">Position</div>
+        <div class="text-sm p-1 my-1">
+          <span>Position</span>
+          <div class="float-right items-center">
+            <input
+              class="mr-1 leading-tight"
+              name="all-market"
+              id="all-market"
+              v-model="isDisplayAllMarkets"
+              type="checkbox"
+            />
+            <label for="all-market" class="text-sm ml-1">All Markets</label>
+          </div>
+        </div>
         <div class="text-sm">
           <table class="text-center w-full">
             <thead class="block">
@@ -173,7 +202,13 @@ const textSideString = (side: string) => {
                 <th class="w-14 p-1">PL</th>
               </tr>
             </thead>
-            <tbody class="block h-position-tbody">
+            <tbody
+              class="overflow-y-scroll block"
+              v-bind:class="{
+                'h-position-tbody-wide': isDisplayAllMarkets,
+                'h-position-tbody': !isDisplayAllMarkets,
+              }"
+            >
               <tr v-show="positionCount === 0" class="bg-modal-container">
                 <td class="p-1 w-72">no positions</td>
               </tr>
@@ -266,6 +301,10 @@ const textSideString = (side: string) => {
 </template>
 
 <style scoped>
+.h-position-tbody-wide {
+  height: 100px;
+  max-height: 100px;
+}
 .h-position-tbody {
   height: 28px;
   max-height: 28px;
