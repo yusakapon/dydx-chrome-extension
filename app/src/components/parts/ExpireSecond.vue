@@ -11,8 +11,18 @@ const toggleExpiration = () => {
 };
 
 const countDownExpiration = () => {
-  if (expiration.value > 1) {
-    expiration.value -= 1;
+  if (selectedUnit.value === "second") {
+    if (expiration.value > 61) {
+      expiration.value -= 1;
+    }
+  } else if (selectedUnit.value === "minute") {
+    if (expiration.value > 2) {
+      expiration.value -= 1;
+    }
+  } else {
+    if (expiration.value > 1) {
+      expiration.value -= 1;
+    }
   }
 };
 const countUpExpiration = () => {
@@ -45,6 +55,13 @@ watch(selectedUnit, () => {
     (element) => element.key === selectedUnit.value
   );
   if (selected) {
+    if (selected.key === "second") {
+      expiration.value = 61;
+    } else if (selected.key === "minute") {
+      expiration.value = 2;
+    } else {
+      expiration.value = 1;
+    }
     expireSecond.value = expiration.value * selected.value;
     emit("expireSecond", expireSecond.value);
   }
@@ -96,6 +113,7 @@ watch(selectedUnit, () => {
       :step="1"
       class="w-8 py-1 bg-modal-container text-center no-count border border-modal"
       v-model="expiration"
+      readonly
     />
     <button
       class="active:opacity-50 py-1 pl-1 pr-2 bg-modal-container rounded-r"
