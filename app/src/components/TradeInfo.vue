@@ -47,7 +47,6 @@ const savePositions = () => {
       isDisplayAllMarkets.value ||
       (market.value && symbol === Market[market.value])
     ) {
-      console.log(symbol);
       const element = positions.value[symbol];
       const priceDicimalPoint =
         store.getters["market/priceDicimalPoint"](symbol);
