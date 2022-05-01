@@ -14,7 +14,7 @@ const props = defineProps({
 });
 watch(props, (props) => {
   market.value = props.currencyPair as keyof typeof Market;
-  savePositions(positions);
+  savePositions();
   saveOrders();
 });
 
@@ -33,21 +33,22 @@ const positionCount = computed(() => {
 
 const isDisplayAllMarkets = ref<boolean>(true);
 watch(isDisplayAllMarkets, () => {
-  savePositions(positions);
+  savePositions();
   saveOrders();
 });
 
-watch(positions, (positions) => {
-  savePositions(positions);
+watch(positions, () => {
+  savePositions();
 });
-const savePositions = (positions: { [x: string]: any }) => {
-  positionArray.value = [];
-  Object.keys(positions).forEach((symbol) => {
+const savePositions = () => {
+  const positionArrayTmp: any = [];
+  Object.keys(positions.value).forEach((symbol) => {
     if (
       isDisplayAllMarkets.value ||
       (market.value && symbol === Market[market.value])
     ) {
-      const element = positions[symbol];
+      console.log(symbol);
+      const element = positions.value[symbol];
       const priceDicimalPoint =
         store.getters["market/priceDicimalPoint"](symbol);
       if (element && priceDicimalPoint !== undefined) {
@@ -62,7 +63,7 @@ const savePositions = (positions: { [x: string]: any }) => {
             pl: short.unrealizedPnl,
             market: short.market,
           };
-          positionArray.value.push(position);
+          positionArrayTmp.push(position);
         } else if (long) {
           const position: position = {
             side: long.side,
@@ -71,11 +72,12 @@ const savePositions = (positions: { [x: string]: any }) => {
             pl: long.unrealizedPnl,
             market: long.market,
           };
-          positionArray.value.push(position);
+          positionArrayTmp.push(position);
         }
       }
     }
   });
+  positionArray.value = positionArrayTmp;
 };
 
 // order
@@ -97,7 +99,7 @@ watch(orders, () => {
 });
 
 const saveOrders = () => {
-  orderArray.value = [];
+  const orderArrayTmp = [];
   for (const key in orders.value) {
     if (Object.prototype.hasOwnProperty.call(orders.value, key)) {
       const element = orders.value[key];
@@ -113,10 +115,11 @@ const saveOrders = () => {
           side: element.side,
           market: element.market,
         };
-        orderArray.value.push(order);
+        orderArrayTmp.push(order);
       }
     }
   }
+  orderArray.value = orderArrayTmp;
 };
 
 // function
