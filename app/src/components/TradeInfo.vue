@@ -130,7 +130,11 @@ const cancelOrder = (id: string) => {
 };
 
 const cancelAllOrders = () => {
-  if (market.value) {
+  if (isDisplayAllMarkets.value) {
+    store.dispatch("order/cancelAll", {
+      market: null,
+    });
+  } else if (market.value) {
     store.dispatch("order/cancelAll", {
       market: Market[market.value],
     });
