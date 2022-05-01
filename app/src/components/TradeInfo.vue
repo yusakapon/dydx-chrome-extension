@@ -56,7 +56,7 @@ watch(positions, (positions) => {
           size: long.size,
           price: Math.round(long.entryPrice * 10 ** point) / point,
           pl: long.unrealizedPnl,
-          market: short.market,
+          market: long.market,
         };
         positionArray.value.push(position);
       }
