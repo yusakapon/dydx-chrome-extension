@@ -3,7 +3,6 @@
 # exec
 while :
 do
-  sleep 30
   if [ -d dist ] && [ -e dist/index.html ]; then
     cp src/manifest.json dist/
     cp src/loader.js dist/
@@ -16,4 +15,5 @@ do
   else
     echo "Continue adjust-dist"
   fi
+  sleep 30 # dist/ に各種ファイルが生成されるのを待つため、30秒待機
 done
