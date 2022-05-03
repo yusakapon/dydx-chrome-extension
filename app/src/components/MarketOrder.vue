@@ -88,18 +88,17 @@ const marketSell = () => {
 };
 
 const marketOrder = async (orderSide: OrderSide) => {
-  try {
-    const key = (currencyPair.crypto +
-      "_" +
-      currencyPair.currency) as keyof typeof Market;
-    const result = await store.dispatch("order/marketOrder", {
-      market: Market[key],
-      side: orderSide,
-      size: amount.value,
-    });
-    console.log(result);
-  } catch (error) {
-    console.log(error);
+  const key = (currencyPair.crypto +
+    "_" +
+    currencyPair.currency) as keyof typeof Market;
+  const ret = await store.dispatch("order/marketOrder", {
+    market: Market[key],
+    side: orderSide,
+    size: amount.value,
+  });
+  const { result, message } = ret;
+  if (!result) {
+    alert(message);
   }
 };
 </script>
