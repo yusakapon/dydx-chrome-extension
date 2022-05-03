@@ -140,6 +140,23 @@ const cancelAllOrders = () => {
   }
 };
 
+const edittingOrderId = ref<string>("");
+const editPrice = ref<number>(0);
+const editting = (id: string, price: number) => {
+  edittingOrderId.value = id;
+  editPrice.value = Number(price);
+};
+const edittingCancel = () => {
+  edittingOrderId.value = "";
+};
+const editOrder = () => {
+  store.dispatch("order/editOrder", {
+    orderId: edittingOrderId.value,
+    price: editPrice.value,
+  });
+  edittingOrderId.value = "";
+};
+
 // class
 const isActive = (status: OrderStatus) => {
   const isActive = status === "OPEN" ? "" : "opacity-60";
@@ -263,7 +280,7 @@ const textSideString = (side: string) => {
                 <th class="w-14 p-1">Side</th>
                 <th class="w-14 p-1">Size</th>
                 <th class="w-14 p-1">Price</th>
-                <th class="w-14 p-1">Cancel</th>
+                <th class="w-14 p-1"></th>
               </tr>
             </thead>
             <tbody class="overflow-y-scroll h-order-tbody block">
@@ -288,11 +305,46 @@ const textSideString = (side: string) => {
                 <td class="border border-modal p-1 w-14">
                   {{ order.amount }}
                 </td>
-                <td class="border border-modal p-1 w-14">{{ order.price }}</td>
-                <td class="border border-modal px-4 py-0.5 w-14">
+                <td
+                  v-if="edittingOrderId !== order.id"
+                  class="border border-modal p-1 w-14"
+                >
+                  {{ order.price }}
+                </td>
+                <td v-else class="border border-modal p-1 w-14">
+                  <input
+                    type="number"
+                    v-model="editPrice"
+                    class="w-14 text-center rounded"
+                  />
+                </td>
+                <td
+                  v-if="edittingOrderId !== order.id"
+                  class="border border-modal p-1 w-14"
+                >
                   <button
-                    class="w-full h-full hover:bg-modal-selected"
+                    class="w-1/2 h-full hover:bg-modal-selected"
+                    @click="editting(order.id, order.price)"
+                  >
+                    <fa icon="pencil"></fa>
+                  </button>
+                  <button
+                    class="w-1/2 h-full hover:bg-modal-selected"
                     @click="cancelOrder(order.id)"
+                  >
+                    <fa icon="times"></fa>
+                  </button>
+                </td>
+                <td v-else class="border border-modal p-1 w-14">
+                  <button
+                    class="w-1/2 h-full hover:bg-modal-selected"
+                    @click="editOrder"
+                  >
+                    <fa icon="check"></fa>
+                  </button>
+                  <button
+                    class="w-1/2 h-full hover:bg-modal-selected"
+                    @click="edittingCancel"
                   >
                     <fa icon="times"></fa>
                   </button>
