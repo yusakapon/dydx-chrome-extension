@@ -36,6 +36,9 @@ export const store = createStore<RootState>({
     errorMsg: "",
   },
   getters: {
+    isProduction: (state) => {
+      return state.host === API_HOST.PRODUCTION;
+    },
     ethAddress: (state) => {
       return state.ethAddress;
     },
