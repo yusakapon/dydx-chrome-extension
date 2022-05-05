@@ -18,11 +18,11 @@ const currencyPairs = computed(() => {
   });
   return pairObj;
 });
+
 const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
 const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
 
 const emit = defineEmits(["currency-pair"]);
-
 onMounted(() => {
   const pair = getPairFromUrl();
   selectedPairs.value = pair;
@@ -30,7 +30,7 @@ onMounted(() => {
   initMarket(selectedPairs.value as keyof typeof Market);
 });
 
-const changeCurrency = (event: Event) => {
+const changeCurrency = () => {
   emit("currency-pair", selectedPairs.value);
   initMarket(selectedPairs.value as keyof typeof Market);
 };
@@ -47,12 +47,6 @@ const getPairFromUrl = () => {
   if (splitUrl[1] !== "trade") return "BTC_USD";
   const pair = splitUrl[2].replace("-", "_");
   return pair;
-};
-
-const setUrl = (pair: string) => {
-  const pairUrl = pair.replace("_", "-");
-  const url = location.pathname;
-  location.pathname = "/" + url.split("/")[1] + "/" + pairUrl;
 };
 </script>
 
