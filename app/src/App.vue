@@ -26,6 +26,11 @@ const startClientRect = reactive({
 
 const modalRef = ref<HTMLImageElement>();
 
+const errorMessage = ref<string>("");
+const setErrorMessage = (msg: string) => {
+  errorMessage.value = msg;
+};
+
 onMounted(() => {
   document.addEventListener("mousemove", onDrag);
   document.addEventListener("mouseup", onDragEnd);
@@ -101,8 +106,11 @@ const currencyPair = (pair: string) => {
       <span class="text-lg font-bold">dYdX Trade Support Extension</span>
     </div>
     <div class="modal-content" v-if="isConnected">
-      <div class="border-b border-solid border-white">
-        <ErrorMessage />
+      <div v-show="errorMessage" class="border-b border-solid border-white">
+        <ErrorMessage
+          :error-message="errorMessage"
+          @error-message="setErrorMessage"
+        />
       </div>
       <div class="border-b border-solid border-white">
         <DisplayAddress @is-connected="connectStatus" />
@@ -114,10 +122,16 @@ const currencyPair = (pair: string) => {
         <TradeInfo :currency-pair="currencyPairSelected" />
       </div>
       <div class="border-b border-solid border-white">
-        <MarketOrder :currency-pair="currencyPairSelected" />
+        <MarketOrder
+          :currency-pair="currencyPairSelected"
+          @error-message="setErrorMessage"
+        />
       </div>
       <div>
-        <LimitOrder :currency-pair="currencyPairSelected" />
+        <LimitOrder
+          :currency-pair="currencyPairSelected"
+          @error-message="setErrorMessage"
+        />
       </div>
     </div>
     <div class="authorize" v-else>
