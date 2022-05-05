@@ -1,60 +1,64 @@
 <script setup lang="ts">
-import { reactive, defineProps, ref, watch, defineEmits } from "vue";
+import {
+  reactive,
+  defineProps,
+  watch,
+  defineEmits,
+  withDefaults,
+  toRefs,
+} from "vue";
 import { useStore } from "@/store";
 import { Market } from "@dydxprotocol/v3-client";
-import { stringify } from "querystring";
 
 const store = useStore();
-const market = ref<keyof typeof Market>();
 const stepButton = reactive({
   firstLevel: 0.01 as number,
   secondLevel: 0.1 as number,
   thirdLevel: 1 as number,
 });
 
-const props = defineProps({
-  currencyPair: Object,
-  orderType: stringify,
+// props
+type Props = {
+  currencyPair: string;
+  orderType: string;
+};
+const props = withDefaults(defineProps<Props>(), {
+  currencyPair: "",
+  orderType: "",
+});
+const { currencyPair, orderType } = toRefs(props);
+
+watch(props, () => {
+  getOrderAmount();
 });
 
-watch(props, (props) => {
-  if (props.currencyPair) {
-    const pair = props.currencyPair;
-    const marketStr = pair.crypto + "_" + pair.currency;
-    market.value = marketStr as keyof typeof Market;
-    getOrderAmount();
-  }
-});
 const emit = defineEmits(["step"]);
 
 const getOrderAmount = () => {
-  if (market.value) {
-    const marketOrderAmount = "setting/marketOrderAmount";
-    const limitOrderAmount = "setting/limitOrderAmount";
-    const key =
-      props.orderType == "market" ? marketOrderAmount : limitOrderAmount;
-    const orderAmount = store.getters[key](Market[market.value]);
-    stepButton.firstLevel = orderAmount[0];
-    stepButton.secondLevel = orderAmount[1];
-    stepButton.thirdLevel = orderAmount[2];
-  }
+  const market = "setting/marketOrderAmount";
+  const limit = "setting/limitOrderAmount";
+  const key = orderType.value === "market" ? market : limit;
+  const marketKey = currencyPair.value as keyof typeof Market;
+  const orderAmount = store.getters[key](Market[marketKey]);
+  stepButton.firstLevel = orderAmount[0];
+  stepButton.secondLevel = orderAmount[1];
+  stepButton.thirdLevel = orderAmount[2];
 };
+
 const saveOrderAmount = () => {
   const amountArray = [
     stepButton.firstLevel,
     stepButton.secondLevel,
     stepButton.thirdLevel,
   ];
-  if (market.value) {
-    const marketOrderAmount = "setting/saveMarketOrderAmount";
-    const limitOrderAmount = "setting/saveLimitOrderAmount";
-    const key =
-      props.orderType == "market" ? marketOrderAmount : limitOrderAmount;
-    store.dispatch(key, {
-      market: Market[market.value],
-      setValue: amountArray,
-    });
-  }
+  const market = "setting/saveMarketOrderAmount";
+  const limit = "setting/saveLimitOrderAmount";
+  const key = orderType.value === "market" ? market : limit;
+  const marketKey = currencyPair.value as keyof typeof Market;
+  store.dispatch(key, {
+    market: Market[marketKey],
+    setValue: amountArray,
+  });
 };
 
 const countDownAmount = () => {

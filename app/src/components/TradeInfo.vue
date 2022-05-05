@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch, defineProps, ref } from "vue";
+import { computed, watch, defineProps, ref, toRefs, withDefaults } from "vue";
 import { useStore } from "@/store";
 import AppAccordion from "./parts/AppAccordion.vue";
 import { Market, OrderSide, OrderStatus } from "@dydxprotocol/v3-client";
@@ -8,12 +8,16 @@ const store = useStore();
 const orders = computed(() => store.getters["account/orders"]);
 const positions = computed(() => store.getters["account/positions"]);
 
-const market = ref<keyof typeof Market>();
-const props = defineProps({
-  currencyPair: String,
+// props
+type Props = {
+  currencyPair: string;
+};
+const props = withDefaults(defineProps<Props>(), {
+  currencyPair: "",
 });
-watch(props, (props) => {
-  market.value = props.currencyPair as keyof typeof Market;
+const { currencyPair } = toRefs(props);
+
+watch(props, () => {
   savePositions();
   saveOrders();
 });
@@ -40,13 +44,12 @@ watch(isDisplayAllMarkets, () => {
 watch(positions, () => {
   savePositions();
 });
+
 const savePositions = () => {
   const positionArrayTmp: any = [];
+  const marketKey = currencyPair.value as keyof typeof Market;
   Object.keys(positions.value).forEach((symbol) => {
-    if (
-      isDisplayAllMarkets.value ||
-      (market.value && symbol === Market[market.value])
-    ) {
+    if (isDisplayAllMarkets.value || symbol === Market[marketKey]) {
       const element = positions.value[symbol];
       const priceDicimalPoint =
         store.getters["market/priceDicimalPoint"](symbol);
@@ -99,13 +102,11 @@ watch(orders, () => {
 
 const saveOrders = () => {
   const orderArrayTmp = [];
+  const marketKey = currencyPair.value as keyof typeof Market;
   for (const key in orders.value) {
     if (Object.prototype.hasOwnProperty.call(orders.value, key)) {
       const element = orders.value[key];
-      if (
-        isDisplayAllMarkets.value ||
-        (market.value && element.market === Market[market.value])
-      ) {
+      if (isDisplayAllMarkets.value || element.market === Market[marketKey]) {
         const order: order = {
           id: element.id,
           price: element.price,
@@ -133,9 +134,10 @@ const cancelAllOrders = () => {
     store.dispatch("order/cancelAll", {
       market: null,
     });
-  } else if (market.value) {
+  } else {
+    const marketKey = currencyPair.value as keyof typeof Market;
     store.dispatch("order/cancelAll", {
-      market: Market[market.value],
+      market: Market[marketKey],
     });
   }
 };

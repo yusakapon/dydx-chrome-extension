@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch, defineProps, computed } from "vue";
+import { ref, watch, defineProps, computed, withDefaults, toRefs } from "vue";
 import { useStore } from "@/store";
 import { Market, OrderSide, TimeInForce } from "@dydxprotocol/v3-client";
 import AppAccordion from "./parts/AppAccordion.vue";
@@ -8,42 +8,33 @@ import AmountClose from "./parts/AmountClose.vue";
 import OrderPrice from "./parts/OrderPrice.vue";
 import ExpireSecond from "./parts/ExpireSecond.vue";
 
-const orderType = "limit";
 const store = useStore();
 
-const props = defineProps({
-  currencyPair: String,
+// props
+type Props = {
+  currencyPair: string;
+};
+const props = withDefaults(defineProps<Props>(), {
+  currencyPair: "",
 });
+const { currencyPair } = toRefs(props);
 
+const orderType = "limit";
 const amount = ref<number>(0);
 const step = ref<number>(0.01);
 const usd = ref<number>(0);
-const currencyPair = reactive({ crypto: "", currency: "" });
 const positions = computed(() => store.getters["account/positions"]);
-
 const price = ref<number>(0);
 const setPrice = ref<number>(0);
 const priceStep = ref<number>(1);
 const isPriceShow = ref<boolean>(true);
-
 const postOnly = ref<boolean>(false);
-
 const expireSecond = ref<number>(2592000);
-
 const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
 const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
 const midPrice = computed(() =>
   Math.floor((bestAskPrice.value + bestBidPrice.value) / 2)
 );
-
-watch(props, (props) => {
-  if (props.currencyPair) {
-    const pair = props.currencyPair.split("_");
-    currencyPair.crypto = pair[0];
-    currencyPair.currency = pair[1];
-    amount.value = 0;
-  }
-});
 
 watch(amount, () => {
   usd.value = Math.round(amount.value * midPrice.value * 1000) / 1000;
@@ -69,9 +60,7 @@ const countUpAmount = (argStep: number) => {
 };
 
 const setClose = () => {
-  const key = (currencyPair.crypto +
-    "_" +
-    currencyPair.currency) as keyof typeof Market;
+  const key = currencyPair.value as keyof typeof Market;
   const position = positions.value[Market[key]];
   const short = position.SHORT;
   const long = position.LONG;
@@ -130,9 +119,7 @@ const limitSell = () => {
 };
 
 const marketOrder = async (orderSide: OrderSide, price: number) => {
-  const key = (currencyPair.crypto +
-    "_" +
-    currencyPair.currency) as keyof typeof Market;
+  const key = currencyPair.value as keyof typeof Market;
   const ret = await store.dispatch("order/limitOrder", {
     market: Market[key],
     side: orderSide,
@@ -165,14 +152,10 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
             :order-type="orderType"
             @step="countUpAmount"
           />
-          <AmountClose
-            class="ml-3.5"
-            :currency-pair="currencyPair"
-            @close="setClose"
-          />
+          <AmountClose class="ml-3.5" @close="setClose" />
         </div>
         <div class="pt-1 pb-2 flex items-center justify-center w-full">
-          <span class="px-1 text-sm">{{ currencyPair.crypto }}</span>
+          <span class="px-1 text-sm">{{ currencyPair.split("_")[0] }}</span>
           <input
             type="number"
             min="0"
@@ -181,7 +164,7 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
             class="w-1/2 px-2 py-2 bg-modal-container rounded"
             v-model="amount"
           />
-          <span class="px-1 text-sm">{{ currencyPair.currency }}</span>
+          <span class="px-1 text-sm">{{ currencyPair.split("_")[1] }}</span>
           <input
             type="number"
             min="0"
