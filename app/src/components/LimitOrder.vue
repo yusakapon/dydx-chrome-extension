@@ -15,6 +15,7 @@ import AmountSelector from "./parts/AmountSelector.vue";
 import AmountClose from "./parts/AmountClose.vue";
 import OrderPrice from "./parts/OrderPrice.vue";
 import ExpireSecond from "./parts/ExpireSecond.vue";
+import AmountInput from "./parts/AmountInput.vue";
 
 const store = useStore();
 
@@ -33,8 +34,9 @@ const emit = defineEmits(["error-message"]);
 const orderType = "limit";
 const amount = ref<number>(0);
 const step = ref<number>(0.01);
-const usd = ref<number>(0);
 const positions = computed(() => store.getters["account/positions"]);
+const buttonStatus = ref<boolean>(false);
+const closeAmount = ref<number>(0);
 const price = ref<number>(0);
 const setPrice = ref<number>(0);
 const priceStep = ref<number>(1);
@@ -47,14 +49,6 @@ const midPrice = computed(() =>
   Math.floor((bestAskPrice.value + bestBidPrice.value) / 2)
 );
 
-watch(amount, () => {
-  usd.value = Math.round(amount.value * midPrice.value * 1000) / 1000;
-});
-
-watch(usd, () => {
-  amount.value = Math.round((usd.value / midPrice.value) * 1000) / 1000;
-});
-
 watch(midPrice, () => {
   if (price.value === 0) {
     setMidPrice();
@@ -63,25 +57,27 @@ watch(midPrice, () => {
 
 const countUpAmount = (argStep: number) => {
   step.value = argStep;
-  if (amount.value !== null) {
-    amount.value = Math.round(step.value * 1000 + amount.value * 1000) / 1000;
-  } else {
-    amount.value = step.value;
-  }
+  buttonStatus.value = !buttonStatus.value;
 };
 
 const setClose = () => {
   const key = currencyPair.value as keyof typeof Market;
   const position = positions.value[Market[key]];
-  const short = position.SHORT;
-  const long = position.LONG;
-  if (short) {
-    const size = short.size;
-    amount.value = -size;
-  } else if (long) {
-    const size = long.size;
-    amount.value = size;
+  if (position) {
+    const short = position.SHORT;
+    const long = position.LONG;
+    if (short) {
+      const size = short.size;
+      closeAmount.value = -size;
+    } else if (long) {
+      const size = long.size;
+      closeAmount.value = size;
+    }
   }
+};
+
+const setAmount = (setAmount: number) => {
+  amount.value = setAmount;
 };
 
 const selectPrice = (price: number) => {
@@ -167,24 +163,13 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
           />
           <AmountClose class="ml-3.5" @close="setClose" />
         </div>
-        <div class="pt-1 pb-2 flex items-center justify-center w-full">
-          <span class="px-1 text-sm">{{ currencyPair.split("_")[0] }}</span>
-          <input
-            type="number"
-            min="0"
-            max="1000000"
+        <div>
+          <AmountInput
+            :currency-pair="currencyPair"
             :step="step"
-            class="w-1/2 px-2 py-2 bg-modal-container rounded"
-            v-model="amount"
-          />
-          <span class="px-1 text-sm">{{ currencyPair.split("_")[1] }}</span>
-          <input
-            type="number"
-            min="0"
-            max="1000000"
-            :step="10"
-            class="w-1/2 px-2 py-2 bg-modal-container rounded"
-            v-model="usd"
+            :button-status="buttonStatus"
+            :close-amount="closeAmount"
+            @amount="setAmount"
           />
         </div>
         <div>
