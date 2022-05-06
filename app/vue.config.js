@@ -7,9 +7,6 @@ module.exports = defineConfig({
   configureWebpack: {
     watch: true,
     cache: true,
-    // watchOptions: {
-    //   ignored: ['manifest.json', 'loader.js', 'index.html'],
-    // },
     plugins: [
       new webpack.ProvidePlugin({
         Buffer: ["buffer", "Buffer"],
