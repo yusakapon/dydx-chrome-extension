@@ -7,6 +7,7 @@ import TradeHeader from "./components/TradeHeader.vue";
 import TradeInfo from "./components/TradeInfo.vue";
 import ConnectWallet from "./components/ConnetWallet.vue";
 import DisplayAddress from "./components/DisplayAddress.vue";
+import ErrorMessage from "./components/ErrorMessage.vue";
 
 const isConnected = ref<boolean>(false);
 const currencyPairSelected = ref<string>();
@@ -24,6 +25,11 @@ const startClientRect = reactive({
 });
 
 const modalRef = ref<HTMLImageElement>();
+
+const errorMessage = ref<string>("");
+const setErrorMessage = (msg: string) => {
+  errorMessage.value = msg;
+};
 
 onMounted(() => {
   document.addEventListener("mousemove", onDrag);
@@ -100,6 +106,12 @@ const currencyPair = (pair: string) => {
       <span class="text-lg font-bold">dYdX Trade Support Extension</span>
     </div>
     <div class="modal-content" v-if="isConnected">
+      <div v-show="errorMessage" class="border-b border-solid border-white">
+        <ErrorMessage
+          :error-message="errorMessage"
+          @error-message="setErrorMessage"
+        />
+      </div>
       <div class="border-b border-solid border-white">
         <DisplayAddress @is-connected="connectStatus" />
       </div>
@@ -110,10 +122,16 @@ const currencyPair = (pair: string) => {
         <TradeInfo :currency-pair="currencyPairSelected" />
       </div>
       <div class="border-b border-solid border-white">
-        <MarketOrder :currency-pair="currencyPairSelected" />
+        <MarketOrder
+          :currency-pair="currencyPairSelected"
+          @error-message="setErrorMessage"
+        />
       </div>
       <div>
-        <LimitOrder :currency-pair="currencyPairSelected" />
+        <LimitOrder
+          :currency-pair="currencyPairSelected"
+          @error-message="setErrorMessage"
+        />
       </div>
     </div>
     <div class="authorize" v-else>

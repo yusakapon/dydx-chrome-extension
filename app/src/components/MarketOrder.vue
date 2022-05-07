@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { ref, watch, defineProps, computed, withDefaults, toRefs } from "vue";
+import {
+  ref,
+  watch,
+  defineProps,
+  computed,
+  withDefaults,
+  toRefs,
+  defineEmits,
+} from "vue";
 import { useStore } from "@/store";
 import { Market, OrderSide } from "@dydxprotocol/v3-client";
 import AppAccordion from "./parts/AppAccordion.vue";
@@ -16,6 +24,9 @@ const props = withDefaults(defineProps<Props>(), {
   currencyPair: "",
 });
 const { currencyPair } = toRefs(props);
+
+// emit
+const emit = defineEmits(["error-message"]);
 
 const orderType = "market";
 const amount = ref<number>(0);
@@ -70,16 +81,17 @@ const marketSell = () => {
 };
 
 const marketOrder = async (orderSide: OrderSide) => {
-  try {
-    const key = currencyPair.value as keyof typeof Market;
-    const result = await store.dispatch("order/marketOrder", {
-      market: Market[key],
-      side: orderSide,
-      size: amount.value,
-    });
-    console.log(result);
-  } catch (error) {
-    console.log(error);
+  const key = currencyPair.value as keyof typeof Market;
+  const ret = await store.dispatch("order/marketOrder", {
+    market: Market[key],
+    side: orderSide,
+    size: amount.value,
+  });
+  const { result, message } = ret;
+  if (!result) {
+    emit("error-message", message);
+  } else {
+    emit("error-message", "");
   }
 };
 </script>
