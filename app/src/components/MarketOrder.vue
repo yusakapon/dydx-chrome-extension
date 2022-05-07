@@ -36,16 +36,25 @@ const positions = computed(() => store.getters["account/positions"]);
 const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
 const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
 const midPrice = computed(() =>
-  Math.floor((bestAskPrice.value + bestBidPrice.value) / 2)
+  roundByTickSize((bestAskPrice.value + bestBidPrice.value) / 2)
 );
 const stepSize = computed(() =>
   store.getters["market/stepSize"](
     Market[currencyPair.value as keyof typeof Market]
   )
 );
+const tickSize = computed(() =>
+  store.getters["market/tickSize"](
+    Market[currencyPair.value as keyof typeof Market]
+  )
+);
 
 const roundByStepSize = (num: number) => {
   const roundNum = Math.round(1 / stepSize.value);
+  return Math.round(num * roundNum) / roundNum;
+};
+const roundByTickSize = (num: number) => {
+  const roundNum = Math.round(1 / tickSize.value);
   return Math.round(num * roundNum) / roundNum;
 };
 
