@@ -106,7 +106,7 @@ const limitBuy = () => {
   const side = OrderSide.BUY;
   const priceSet = isPriceShow.value
     ? price.value
-    : midPrice.value - setPrice.value;
+    : bestBidPrice.value - setPrice.value;
   marketOrder(side, priceSet);
 };
 
@@ -114,7 +114,7 @@ const limitSell = () => {
   const side = OrderSide.SELL;
   const priceSet = isPriceShow.value
     ? price.value
-    : midPrice.value + setPrice.value;
+    : bestAskPrice.value + setPrice.value;
   marketOrder(side, priceSet);
 };
 
