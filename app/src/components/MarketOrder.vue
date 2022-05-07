@@ -112,7 +112,7 @@ const marketOrder = async (orderSide: OrderSide) => {
             :order-type="orderType"
             @step="countUpAmount"
           />
-          <AmountClose class="ml-3.5" @close="setClose" />
+          <AmountClose @close="setClose" />
         </div>
         <div class="pt-1 pb-2 flex items-center justify-center w-full">
           <span class="px-1 text-sm">{{ currencyPair.split("_")[0] }}</span>
