@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { reactive, defineProps, ref, watch, defineEmits } from "vue";
+import {
+  reactive,
+  defineProps,
+  watch,
+  defineEmits,
+  withDefaults,
+  toRefs,
+} from "vue";
 import { useStore } from "@/store";
 import { Market } from "@dydxprotocol/v3-client";
 
 const store = useStore();
-const market = ref<keyof typeof Market>();
 const stepButton = reactive({
   firstLevel: 1 as number,
   secondLevel: 10 as number,
@@ -12,30 +18,31 @@ const stepButton = reactive({
   fourthLevel: 1000 as number,
 });
 
-const props = defineProps({
-  currencyPair: Object,
+// props
+type Props = {
+  currencyPair: string;
+};
+const props = withDefaults(defineProps<Props>(), {
+  currencyPair: "",
+});
+const { currencyPair } = toRefs(props);
+
+watch(props, () => {
+  getOrderPrice();
 });
 
-watch(props, (props) => {
-  if (props.currencyPair) {
-    const pair = props.currencyPair;
-    const marketStr = pair.crypto + "_" + pair.currency;
-    market.value = marketStr as keyof typeof Market;
-    getOrderPrice();
-  }
-});
 const emit = defineEmits(["price"]);
 
 const getOrderPrice = () => {
-  if (market.value) {
-    const key = "setting/limitOrderPrice";
-    const orderPrice = store.getters[key](Market[market.value]);
-    stepButton.firstLevel = orderPrice[0];
-    stepButton.secondLevel = orderPrice[1];
-    stepButton.thirdLevel = orderPrice[2];
-    stepButton.fourthLevel = orderPrice[3];
-  }
+  const key = "setting/limitOrderPrice";
+  const marketKey = currencyPair.value as keyof typeof Market;
+  const orderPrice = store.getters[key](Market[marketKey]);
+  stepButton.firstLevel = orderPrice[0];
+  stepButton.secondLevel = orderPrice[1];
+  stepButton.thirdLevel = orderPrice[2];
+  stepButton.fourthLevel = orderPrice[3];
 };
+
 const saveOrderPrice = () => {
   const priceArray = [
     stepButton.firstLevel,
@@ -43,13 +50,12 @@ const saveOrderPrice = () => {
     stepButton.thirdLevel,
     stepButton.fourthLevel,
   ];
-  if (market.value) {
-    const key = "setting/limitOrderPrice";
-    store.dispatch(key, {
-      market: Market[market.value],
-      setValue: priceArray,
-    });
-  }
+  const key = "setting/limitOrderPrice";
+  const marketKey = currencyPair.value as keyof typeof Market;
+  store.dispatch(key, {
+    market: Market[marketKey],
+    setValue: priceArray,
+  });
 };
 
 const countDownPrice = () => {

@@ -1,56 +1,40 @@
 <script setup lang="ts">
-import { reactive, ref, watch, defineProps, computed } from "vue";
+import { ref, watch, defineProps, computed, withDefaults, toRefs } from "vue";
 import { useStore } from "@/store";
 import { Market, OrderSide } from "@dydxprotocol/v3-client";
 import AppAccordion from "./parts/AppAccordion.vue";
 import AmountSelector from "./parts/AmountSelector.vue";
 import AmountClose from "./parts/AmountClose.vue";
 
-const orderType = "market";
 const store = useStore();
 
-const props = defineProps({
-  currencyPair: String,
+// props
+type Props = {
+  currencyPair: string;
+};
+const props = withDefaults(defineProps<Props>(), {
+  currencyPair: "",
 });
+const { currencyPair } = toRefs(props);
 
+const orderType = "market";
 const amount = ref<number>(0);
 const step = ref<number>(0.01);
 const usd = ref<number>(0);
-const currencyPair = reactive({ crypto: "", currency: "" });
 const positions = computed(() => store.getters["account/positions"]);
-
-const buttonDisabled = reactive({
-  sell: false as boolean,
-  buy: false as boolean,
-});
-
-watch(props, (props) => {
-  if (props.currencyPair) {
-    const pair = props.currencyPair.split("_");
-    currencyPair.crypto = pair[0];
-    currencyPair.currency = pair[1];
-    amount.value = 0;
-  }
-});
+const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
+const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
+const midPrice = computed(() =>
+  Math.floor((bestAskPrice.value + bestBidPrice.value) / 2)
+);
 
 watch(amount, () => {
-  const midPrice = getMidPrice();
-  usd.value = Math.round(amount.value * midPrice * 1000) / 1000;
-  buttonDisabled.sell = false;
-  buttonDisabled.buy = false;
+  usd.value = Math.round(amount.value * midPrice.value * 1000) / 1000;
 });
 
 watch(usd, () => {
-  const midPrice = getMidPrice();
-  amount.value = Math.round((usd.value / midPrice) * 1000) / 1000;
+  amount.value = Math.round((usd.value / midPrice.value) * 1000) / 1000;
 });
-
-const getMidPrice = () => {
-  const bestAskPrice = store.getters["orderbook/bestAskPrice"];
-  const bestBidPrice = store.getters["orderbook/bestBidPrice"];
-  const midPrice = (bestAskPrice + bestBidPrice) / 2;
-  return midPrice;
-};
 
 const countUpAmount = (argStep: number) => {
   step.value = argStep;
@@ -62,9 +46,7 @@ const countUpAmount = (argStep: number) => {
 };
 
 const setClose = () => {
-  const key = (currencyPair.crypto +
-    "_" +
-    currencyPair.currency) as keyof typeof Market;
+  const key = currencyPair.value as keyof typeof Market;
   const position = positions.value[Market[key]];
   const short = position.SHORT;
   const long = position.LONG;
@@ -89,9 +71,7 @@ const marketSell = () => {
 
 const marketOrder = async (orderSide: OrderSide) => {
   try {
-    const key = (currencyPair.crypto +
-      "_" +
-      currencyPair.currency) as keyof typeof Market;
+    const key = currencyPair.value as keyof typeof Market;
     const result = await store.dispatch("order/marketOrder", {
       market: Market[key],
       side: orderSide,
@@ -120,14 +100,10 @@ const marketOrder = async (orderSide: OrderSide) => {
             :order-type="orderType"
             @step="countUpAmount"
           />
-          <AmountClose
-            class="ml-3.5"
-            :currency-pair="currencyPair"
-            @close="setClose"
-          />
+          <AmountClose class="ml-3.5" @close="setClose" />
         </div>
         <div class="pt-1 pb-2 flex items-center justify-center w-full">
-          <span class="px-1 text-sm">{{ currencyPair.crypto }}</span>
+          <span class="px-1 text-sm">{{ currencyPair.split("_")[0] }}</span>
           <input
             type="number"
             min="0"
@@ -136,7 +112,7 @@ const marketOrder = async (orderSide: OrderSide) => {
             class="w-1/2 px-2 py-2 bg-modal-container rounded"
             v-model="amount"
           />
-          <span class="px-1 text-sm">{{ currencyPair.currency }}</span>
+          <span class="px-1 text-sm">{{ currencyPair.split("_")[1] }}</span>
           <input
             type="number"
             min="0"
@@ -150,14 +126,12 @@ const marketOrder = async (orderSide: OrderSide) => {
           <button
             @click="marketSell"
             class="bg-modal-container hover:opacity-50 active:border-none font-semibold py-3 px-6 border border-sell text-sell rounded"
-            :disabled="buttonDisabled.sell"
           >
             Market Sell
           </button>
           <button
             @click="marketBuy"
             class="bg-modal-container hover:opacity-50 active:border-none font-semibold py-3 px-6 border border-buy text-buy rounded"
-            :disabled="buttonDisabled.buy"
           >
             Market Buy
           </button>
