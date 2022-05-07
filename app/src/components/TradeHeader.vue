@@ -19,8 +19,19 @@ const currencyPairs = computed(() => {
   return pairObj;
 });
 
-const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
-const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
+const priceDicimalPoint = computed(() =>
+  store.getters["market/priceDicimalPoint"](
+    Market[selectedPairs.value as keyof typeof Market]
+  )
+);
+const bestAskPrice = computed(() => {
+  const price = store.getters["orderbook/bestAskPrice"];
+  return price ? price.toFixed(priceDicimalPoint.value) : "";
+});
+const bestBidPrice = computed(() => {
+  const price = store.getters["orderbook/bestBidPrice"];
+  return price ? price.toFixed(priceDicimalPoint.value) : "";
+});
 
 const emit = defineEmits(["currency-pair"]);
 onMounted(() => {
@@ -67,7 +78,9 @@ const getPairFromUrl = () => {
         <div class="px-2 pb-2">
           {{ bestAskPrice }}
         </div>
-        <div class="px-2">{{ bestBidPrice }}</div>
+        <div class="px-2">
+          {{ bestBidPrice }}
+        </div>
       </div>
     </div>
   </div>
