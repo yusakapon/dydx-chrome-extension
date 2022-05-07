@@ -38,19 +38,29 @@ const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
 const midPrice = computed(() =>
   Math.floor((bestAskPrice.value + bestBidPrice.value) / 2)
 );
+const stepSize = computed(() =>
+  store.getters["market/stepSize"](
+    Market[currencyPair.value as keyof typeof Market]
+  )
+);
+
+const roundByStepSize = (num: number) => {
+  const roundNum = Math.round(1 / stepSize.value);
+  return Math.round(num * roundNum) / roundNum;
+};
 
 watch(amount, () => {
-  usd.value = Math.round(amount.value * midPrice.value * 1000) / 1000;
+  usd.value = roundByStepSize(amount.value * midPrice.value);
 });
 
 watch(usd, () => {
-  amount.value = Math.round((usd.value / midPrice.value) * 1000) / 1000;
+  amount.value = roundByStepSize(usd.value / midPrice.value);
 });
 
 const countUpAmount = (argStep: number) => {
   step.value = argStep;
   if (amount.value !== null) {
-    amount.value = Math.round(step.value * 1000 + amount.value * 1000) / 1000;
+    amount.value = roundByStepSize(step.value + amount.value);
   } else {
     amount.value = step.value;
   }
