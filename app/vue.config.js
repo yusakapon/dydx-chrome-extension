@@ -5,6 +5,8 @@ module.exports = defineConfig({
   filenameHashing: false,
   productionSourceMap: false,
   configureWebpack: {
+    watch: true,
+    cache: true,
     plugins: [
       new webpack.ProvidePlugin({
         Buffer: ["buffer", "Buffer"],

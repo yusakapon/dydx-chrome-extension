@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "vue-cli-service build",
-    "generate": "npm run build && cp src/manifest.json dist/ && cp src/loader.js dist/ && rm dist/index.html",
+    "generate": "rm -rf dist && (sh bin/adjust-dist.sh &) ; npm run build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
