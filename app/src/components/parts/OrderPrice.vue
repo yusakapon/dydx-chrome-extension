@@ -50,7 +50,7 @@ const saveOrderPrice = () => {
     stepButton.thirdLevel,
     stepButton.fourthLevel,
   ];
-  const key = "setting/limitOrderPrice";
+  const key = "setting/saveLimitOrderPrice";
   const marketKey = currencyPair.value as keyof typeof Market;
   store.dispatch(key, {
     market: Market[marketKey],
@@ -59,7 +59,9 @@ const saveOrderPrice = () => {
 };
 
 const countDownPrice = () => {
-  if (stepButton.firstLevel >= 0.01) {
+  const marketKey = currencyPair.value as keyof typeof Market;
+  const tickSize = store.getters["market/tickSize"](Market[marketKey]);
+  if (stepButton.firstLevel > tickSize) {
     stepButton.firstLevel = stepButton.firstLevel / 10;
     stepButton.secondLevel = stepButton.secondLevel / 10;
     stepButton.thirdLevel = stepButton.thirdLevel / 10;
@@ -69,7 +71,7 @@ const countDownPrice = () => {
 };
 
 const countUpPrice = () => {
-  if (stepButton.thirdLevel <= 100) {
+  if (stepButton.fourthLevel < 10000) {
     stepButton.firstLevel = stepButton.firstLevel * 10;
     stepButton.secondLevel = stepButton.secondLevel * 10;
     stepButton.thirdLevel = stepButton.thirdLevel * 10;

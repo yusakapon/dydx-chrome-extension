@@ -36,21 +36,40 @@ const positions = computed(() => store.getters["account/positions"]);
 const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
 const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
 const midPrice = computed(() =>
-  Math.floor((bestAskPrice.value + bestBidPrice.value) / 2)
+  roundByTickSize((bestAskPrice.value + bestBidPrice.value) / 2)
+);
+const stepSize = computed(() =>
+  store.getters["market/stepSize"](
+    Market[currencyPair.value as keyof typeof Market]
+  )
+);
+const tickSize = computed(() =>
+  store.getters["market/tickSize"](
+    Market[currencyPair.value as keyof typeof Market]
+  )
 );
 
+const roundByStepSize = (num: number) => {
+  const roundNum = Math.round(1 / stepSize.value);
+  return Math.round(num * roundNum) / roundNum;
+};
+const roundByTickSize = (num: number) => {
+  const roundNum = Math.round(1 / tickSize.value);
+  return Math.round(num * roundNum) / roundNum;
+};
+
 watch(amount, () => {
-  usd.value = Math.round(amount.value * midPrice.value * 1000) / 1000;
+  usd.value = roundByStepSize(amount.value * midPrice.value);
 });
 
 watch(usd, () => {
-  amount.value = Math.round((usd.value / midPrice.value) * 1000) / 1000;
+  amount.value = roundByStepSize(usd.value / midPrice.value);
 });
 
 const countUpAmount = (argStep: number) => {
   step.value = argStep;
   if (amount.value !== null) {
-    amount.value = Math.round(step.value * 1000 + amount.value * 1000) / 1000;
+    amount.value = roundByStepSize(step.value + amount.value);
   } else {
     amount.value = step.value;
   }
@@ -112,7 +131,7 @@ const marketOrder = async (orderSide: OrderSide) => {
             :order-type="orderType"
             @step="countUpAmount"
           />
-          <AmountClose class="ml-3.5" @close="setClose" />
+          <AmountClose @close="setClose" />
         </div>
         <div class="pt-1 pb-2 flex items-center justify-center w-full">
           <span class="px-1 text-sm">{{ currencyPair.split("_")[0] }}</span>
