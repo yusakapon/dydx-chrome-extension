@@ -102,7 +102,7 @@ const marketOrder = async (orderSide: OrderSide) => {
             :order-type="orderType"
             @step="countUpAmount"
           />
-          <AmountClose class="ml-3.5" @close="setClose" />
+          <AmountClose @close="setClose" />
         </div>
         <div>
           <AmountInput

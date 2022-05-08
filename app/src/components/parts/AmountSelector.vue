@@ -62,7 +62,9 @@ const saveOrderAmount = () => {
 };
 
 const countDownAmount = () => {
-  if (stepButton.firstLevel >= 0.01) {
+  const marketKey = currencyPair.value as keyof typeof Market;
+  const minOrderSize = store.getters["market/minOrderSize"](Market[marketKey]);
+  if (stepButton.firstLevel > minOrderSize) {
     stepButton.firstLevel = stepButton.firstLevel / 10;
     stepButton.secondLevel = stepButton.secondLevel / 10;
     stepButton.thirdLevel = stepButton.thirdLevel / 10;
@@ -71,7 +73,7 @@ const countDownAmount = () => {
 };
 
 const countUpAmount = () => {
-  if (stepButton.thirdLevel <= 100) {
+  if (stepButton.thirdLevel < 100000) {
     stepButton.firstLevel = stepButton.firstLevel * 10;
     stepButton.secondLevel = stepButton.secondLevel * 10;
     stepButton.thirdLevel = stepButton.thirdLevel * 10;
@@ -89,19 +91,19 @@ const countArgAmount = (argStep: number) => {
     <fa icon="angle-left"></fa>
   </button>
   <button
-    class="bg-modal-container w-12 py-2 rounded-l text-sm active:opacity-50"
+    class="bg-modal-container w-16 py-2 rounded-l text-sm active:opacity-50"
     @click="countArgAmount(stepButton.firstLevel)"
   >
     +{{ stepButton.firstLevel }}
   </button>
   <button
-    class="bg-modal-container w-12 py-2 border-r border-l border-modal text-sm active:opacity-50"
+    class="bg-modal-container w-16 py-2 border-r border-l border-modal text-sm active:opacity-50"
     @click="countArgAmount(stepButton.secondLevel)"
   >
     +{{ stepButton.secondLevel }}
   </button>
   <button
-    class="bg-modal-container w-12 py-2 rounded-r text-sm active:opacity-50"
+    class="bg-modal-container w-16 py-2 rounded-r text-sm active:opacity-50"
     @click="countArgAmount(stepButton.thirdLevel)"
   >
     +{{ stepButton.thirdLevel }}

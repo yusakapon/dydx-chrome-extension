@@ -46,8 +46,21 @@ const expireSecond = ref<number>(2592000);
 const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
 const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
 const midPrice = computed(() =>
-  Math.floor((bestAskPrice.value + bestBidPrice.value) / 2)
+  roundByTickSize((bestAskPrice.value + bestBidPrice.value) / 2)
 );
+const tickSize = computed(() =>
+  store.getters["market/tickSize"](
+    Market[currencyPair.value as keyof typeof Market]
+  )
+);
+watch(tickSize, () => {
+  priceStep.value = tickSize.value;
+});
+
+const roundByTickSize = (num: number) => {
+  const roundNum = Math.round(1 / tickSize.value);
+  return Math.round(num * roundNum) / roundNum;
+};
 
 watch(midPrice, () => {
   if (price.value === 0) {
@@ -94,7 +107,7 @@ const setMidPrice = () => {
 };
 
 const countDownStep = () => {
-  if (priceStep.value > 1) {
+  if (priceStep.value > tickSize.value) {
     priceStep.value /= 10;
   }
 };
@@ -161,7 +174,7 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
             :order-type="orderType"
             @step="countUpAmount"
           />
-          <AmountClose class="ml-3.5" @close="setClose" />
+          <AmountClose @close="setClose" />
         </div>
         <div>
           <AmountInput
