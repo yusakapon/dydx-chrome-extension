@@ -56,7 +56,8 @@ const getPairFromUrl = () => {
   const url = location.pathname;
   const splitUrl = url.split("/");
   if (splitUrl[1] !== "trade") return "BTC_USD";
-  const pair = splitUrl[2].replace("-", "_");
+  let pair = splitUrl[2].replace("-", "_");
+  pair = pair.replace("1INCH", "ONEINCH");
   return pair;
 };
 </script>
