@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useStore } from "@/store";
+import { Market } from "@dydxprotocol/v3-client";
 import {
   defineProps,
   toRefs,
@@ -36,43 +37,63 @@ const usd = ref<number>(0);
 const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
 const bestBidPrice = computed(() => store.getters["orderbook/bestBidPrice"]);
 const midPrice = computed(() =>
-  Math.floor((bestAskPrice.value + bestBidPrice.value) / 2)
+  roundByTickSize((bestAskPrice.value + bestBidPrice.value) / 2)
 );
+
+const stepSize = computed(() =>
+  store.getters["market/stepSize"](
+    Market[currencyPair.value as keyof typeof Market]
+  )
+);
+const tickSize = computed(() =>
+  store.getters["market/tickSize"](
+    Market[currencyPair.value as keyof typeof Market]
+  )
+);
+const roundByStepSize = (num: number) => {
+  const roundNumCalc = Math.round(1 / stepSize.value);
+  const roundNum = roundNumCalc >= 1 ? roundNumCalc : 1;
+  return Math.round(num * roundNum) / roundNum;
+};
+const roundByTickSize = (num: number) => {
+  const roundNumCalc = Math.round(1 / tickSize.value);
+  const roundNum = roundNumCalc >= 1 ? roundNumCalc : 1;
+  return Math.round(num * roundNum) / roundNum;
+};
 
 watch(closeAmount, (closeAmount) => {
   amount.value = closeAmount;
-  usd.value = Math.round(amount.value * midPrice.value * 1000) / 1000;
+  usd.value = roundByStepSize(Number(amount.value) * Number(midPrice.value));
   emit("amount", amount.value);
 });
 
 watch(buttonStatus, () => {
-  amount.value = Math.round((amount.value + step.value) * 1000) / 1000;
-  usd.value = Math.round(amount.value * midPrice.value * 1000) / 1000;
+  amount.value = roundByStepSize(Number(amount.value) + Number(step.value));
+  usd.value = roundByStepSize(Number(amount.value) * Number(midPrice.value));
   emit("amount", amount.value);
 });
 
 const changeAmount = (event: Event) => {
   const value = Number((event.currentTarget as HTMLInputElement).value);
-  usd.value = Math.round(value * midPrice.value * 1000) / 1000;
+  usd.value = roundByStepSize(value * Number(midPrice.value));
   emit("amount", amount.value);
 };
 
 const changeUsd = (event: Event) => {
   const value = Number((event.currentTarget as HTMLInputElement).value);
-  amount.value = Math.round((value / midPrice.value) * 1000) / 1000;
+  amount.value = roundByStepSize(value / Number(midPrice.value));
   emit("amount", amount.value);
 };
 </script>
 
 <template>
   <div class="pt-1 pb-2 flex items-center justify-center w-full">
-    <div class="inline w-full px-1 rounded bg-modal-container relative mr-1">
+    <div class="inline w-full px-1 rounded bg-modal-container relative">
       <input
         type="number"
         min="0"
-        max="1000000"
         :step="step"
-        class="w-2/3 p-2 bg-modal-container"
+        class="py-2 bg-modal-container text-sm w-2/3"
         v-model="amount"
         @input="changeAmount"
       />
@@ -81,13 +102,13 @@ const changeUsd = (event: Event) => {
         >{{ currencyPair.split("_")[0].replace("ONEINCH", "1INCH") }}</span
       >
     </div>
+    <span class="px-1 text-xl">≒</span>
     <div class="inline w-full px-1 rounded bg-modal-container relative">
       <input
         type="number"
         min="0"
-        max="1000000"
         :step="10"
-        class="w-2/3 p-2 bg-modal-container"
+        class="py-2 bg-modal-container text-sm w-2/3"
         v-model="usd"
         @input="changeUsd"
       />
