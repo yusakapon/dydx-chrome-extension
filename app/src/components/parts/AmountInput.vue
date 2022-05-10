@@ -73,6 +73,11 @@ watch(buttonStatus, () => {
   emit("amount", amount.value);
 });
 
+watch(currencyPair, () => {
+  amount.value = 0;
+  usd.value = 0;
+});
+
 const changeAmount = (event: Event) => {
   const value = Number((event.currentTarget as HTMLInputElement).value);
   usd.value = roundByStepSize(value * Number(midPrice.value));

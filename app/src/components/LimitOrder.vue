@@ -62,6 +62,10 @@ const roundByTickSize = (num: number) => {
   return Math.round(num * roundNum) / roundNum;
 };
 
+watch(currencyPair, () => {
+  price.value = 0;
+});
+
 watch(midPrice, () => {
   if (price.value === 0) {
     setMidPrice();
