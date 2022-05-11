@@ -6,6 +6,7 @@ import {
   defineEmits,
   withDefaults,
   toRefs,
+  ref,
 } from "vue";
 import { useStore } from "@/store";
 import { Market } from "@dydxprotocol/v3-client";
@@ -17,6 +18,11 @@ const stepButton = reactive({
   thirdLevel: 100 as number,
   fourthLevel: 1000 as number,
 });
+
+const firstLevelInput = ref<HTMLInputElement>();
+const secondLevelInput = ref<HTMLInputElement>();
+const thirdLevelInput = ref<HTMLInputElement>();
+const fourthLevelInput = ref<HTMLInputElement>();
 
 // props
 type Props = {
@@ -41,6 +47,10 @@ const getOrderPrice = () => {
   stepButton.secondLevel = orderPrice[1];
   stepButton.thirdLevel = orderPrice[2];
   stepButton.fourthLevel = orderPrice[3];
+  if (firstLevelInput.value) firstLevelInput.value.checked = false;
+  if (secondLevelInput.value) secondLevelInput.value.checked = false;
+  if (thirdLevelInput.value) thirdLevelInput.value.checked = false;
+  if (fourthLevelInput.value) fourthLevelInput.value.checked = false;
 };
 
 const saveOrderPrice = () => {
@@ -86,22 +96,7 @@ const setArgPrice = (argPrice: number) => {
 </script>
 
 <template>
-  <div class="inline-flex w-full text-sm">
-    <label>
-      <input
-        type="radio"
-        name="toggle"
-        id="toggle"
-        class="hidden peer"
-        v-on:change="setArgPrice(0)"
-        checked
-      />
-      <div
-        class="w-12 py-2 mr-2 text-center cursor-pointer bg-modal-container rounded border border-modal-container peer-checked:bg-modal-selected"
-      >
-        Self
-      </div>
-    </label>
+  <div class="inline-flex w-full text-sm py-1">
     <button @click="countDownPrice()" class="active:opacity-50 py-2 pl-2 pr-1">
       <fa icon="angle-left"></fa>
     </button>
@@ -112,9 +107,10 @@ const setArgPrice = (argPrice: number) => {
         id="toggle"
         class="hidden peer"
         v-on:change="setArgPrice(stepButton.firstLevel)"
+        ref="firstLevelInput"
       />
       <div
-        class="w-12 py-2 text-center cursor-pointer bg-modal-container rounded-l border border-modal-container peer-checked:bg-modal-selected"
+        class="w-14 py-2 text-center cursor-pointer bg-modal-container rounded-l border border-modal-container peer-checked:bg-modal-selected"
       >
         ±{{ stepButton.firstLevel }}
       </div>
@@ -126,9 +122,10 @@ const setArgPrice = (argPrice: number) => {
         id="toggle"
         class="hidden peer"
         v-on:change="setArgPrice(stepButton.secondLevel)"
+        ref="secondLevelInput"
       />
       <div
-        class="w-12 py-2 text-center cursor-pointer bg-modal-container border border-modal-container peer-checked:bg-modal-selected"
+        class="w-14 py-2 text-center cursor-pointer bg-modal-container border border-modal-container peer-checked:bg-modal-selected"
       >
         ±{{ stepButton.secondLevel }}
       </div>
@@ -140,9 +137,10 @@ const setArgPrice = (argPrice: number) => {
         id="toggle"
         class="hidden peer"
         v-on:change="setArgPrice(stepButton.thirdLevel)"
+        ref="thirdLevelInput"
       />
       <div
-        class="w-12 py-2 text-center cursor-pointer bg-modal-container border border-modal-container peer-checked:bg-modal-selected"
+        class="w-14 py-2 text-center cursor-pointer bg-modal-container border border-modal-container peer-checked:bg-modal-selected"
       >
         ±{{ stepButton.thirdLevel }}
       </div>
@@ -154,9 +152,10 @@ const setArgPrice = (argPrice: number) => {
         id="toggle"
         class="hidden peer"
         v-on:change="setArgPrice(stepButton.fourthLevel)"
+        ref="fourthLevelInput"
       />
       <div
-        class="w-12 py-2 text-center cursor-pointer bg-modal-container rounded-r border border-modal-container peer-checked:bg-modal-selected"
+        class="w-14 py-2 text-center cursor-pointer bg-modal-container rounded-r border border-modal-container peer-checked:bg-modal-selected"
       >
         ±{{ stepButton.fourthLevel }}
       </div>
