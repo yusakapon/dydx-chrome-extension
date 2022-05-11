@@ -66,12 +66,6 @@ watch(currencyPair, () => {
   price.value = 0;
 });
 
-watch(midPrice, () => {
-  if (price.value === 0) {
-    setMidPrice();
-  }
-});
-
 const countUpAmount = (argStep: number) => {
   step.value = argStep;
   buttonStatus.value = !buttonStatus.value;
