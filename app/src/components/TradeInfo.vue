@@ -48,38 +48,40 @@ watch(positions, () => {
 const savePositions = () => {
   const positionArrayTmp: any = [];
   const marketKey = currencyPair.value as keyof typeof Market;
-  Object.keys(positions.value).forEach((symbol) => {
-    if (isDisplayAllMarkets.value || symbol === Market[marketKey]) {
-      const element = positions.value[symbol];
-      const priceDicimalPoint =
-        store.getters["market/priceDicimalPoint"](symbol);
-      if (element && priceDicimalPoint !== undefined) {
-        const short = element["SHORT"];
-        const long = element["LONG"];
-        const point = 10 ** priceDicimalPoint;
-        if (short) {
-          const position: position = {
-            side: short.side,
-            size: -short.size,
-            price: Math.round(short.entryPrice * point) / point,
-            pl: short.unrealizedPnl,
-            market: short.market,
-          };
-          positionArrayTmp.push(position);
-        } else if (long) {
-          const position: position = {
-            side: long.side,
-            size: long.size,
-            price: Math.round(long.entryPrice * point) / point,
-            pl: long.unrealizedPnl,
-            market: long.market,
-          };
-          positionArrayTmp.push(position);
+  if (positions.value) {
+    Object.keys(positions.value).forEach((symbol) => {
+      if (isDisplayAllMarkets.value || symbol === Market[marketKey]) {
+        const element = positions.value[symbol];
+        const priceDicimalPoint =
+          store.getters["market/priceDicimalPoint"](symbol);
+        if (element && priceDicimalPoint !== undefined) {
+          const short = element["SHORT"];
+          const long = element["LONG"];
+          const point = 10 ** priceDicimalPoint;
+          if (short) {
+            const position: position = {
+              side: short.side,
+              size: -short.size,
+              price: Math.round(short.entryPrice * point) / point,
+              pl: short.unrealizedPnl,
+              market: short.market,
+            };
+            positionArrayTmp.push(position);
+          } else if (long) {
+            const position: position = {
+              side: long.side,
+              size: long.size,
+              price: Math.round(long.entryPrice * point) / point,
+              pl: long.unrealizedPnl,
+              market: long.market,
+            };
+            positionArrayTmp.push(position);
+          }
         }
       }
-    }
-  });
-  positionArray.value = positionArrayTmp;
+    });
+    positionArray.value = positionArrayTmp;
+  }
 };
 
 // order
