@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "dYdX Trade Support Extension",
+  "name": "QUICK dYdX - dYdX Trade Support Extension",
   "description": "This extension is a tool to help you trade on the Ethereum Layer-2 dex 'dYdX'.",
   "version": "1.0",
   "content_scripts": [
