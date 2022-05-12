@@ -40,7 +40,7 @@ const closeAmount = ref<number>(0);
 const price = ref<number>(0);
 const setPrice = ref<number>(0);
 const priceStep = ref<number>(1);
-const isPriceShow = ref<boolean>(true);
+const isAutoMode = ref<boolean>(true);
 const postOnly = ref<boolean>(false);
 const expireSecond = ref<number>(2592000);
 const bestAskPrice = computed(() => store.getters["orderbook/bestAskPrice"]);
@@ -54,7 +54,7 @@ const tickSize = computed(() =>
   )
 );
 watch(tickSize, () => {
-  priceStep.value = tickSize.value;
+  priceStep.value = tickSize.value * 100;
 });
 
 const roundByTickSize = (num: number) => {
@@ -64,6 +64,7 @@ const roundByTickSize = (num: number) => {
 
 watch(currencyPair, () => {
   price.value = 0;
+  setPrice.value = 0;
 });
 
 const countUpAmount = (argStep: number) => {
@@ -92,17 +93,19 @@ const setAmount = (setAmount: number) => {
 };
 
 const selectPrice = (price: number) => {
-  if (price === 0) {
-    isPriceShow.value = true;
-  } else {
-    isPriceShow.value = false;
-    setPrice.value = price;
-  }
+  setPrice.value = price;
 };
 
 const setMidPrice = () => {
   price.value = midPrice.value;
 };
+watch(isAutoMode, () => {
+  if (isAutoMode.value) {
+    setPrice.value = 0;
+  } else {
+    setMidPrice();
+  }
+});
 
 const countDownStep = () => {
   if (priceStep.value > tickSize.value) {
@@ -121,18 +124,26 @@ const setExpireSecond = (setExpireSecond: number) => {
 };
 
 const limitBuy = () => {
+  if (isAutoMode.value && setPrice.value === 0) {
+    emit("error-message", "Please select Order Price.");
+    return;
+  }
   const side = OrderSide.BUY;
-  const priceSet = isPriceShow.value
-    ? price.value
-    : bestBidPrice.value - setPrice.value;
+  const priceSet = isAutoMode.value
+    ? bestBidPrice.value - setPrice.value
+    : price.value;
   marketOrder(side, priceSet);
 };
 
 const limitSell = () => {
+  if (isAutoMode.value && setPrice.value === 0) {
+    emit("error-message", "Please select Order Price.");
+    return;
+  }
   const side = OrderSide.SELL;
-  const priceSet = isPriceShow.value
-    ? price.value
-    : bestAskPrice.value + setPrice.value;
+  const priceSet = isAutoMode.value
+    ? bestAskPrice.value + setPrice.value
+    : price.value;
   marketOrder(side, priceSet);
 };
 
@@ -184,12 +195,22 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
           />
         </div>
         <div>
-          <span class="text-sm">Price</span>
+          <span class="text-sm">Order Price</span>
+          <div class="float-right items-center">
+            <input
+              class="mr-1 leading-tight"
+              name="auto-mode"
+              id="auto-mode"
+              v-model="isAutoMode"
+              type="checkbox"
+            />
+            <label for="auto-mode" class="text-sm ml-1">Auto Mode</label>
+          </div>
         </div>
-        <div class="inline-flex w-full text-sm my-1">
+        <div v-if="isAutoMode" class="inline-flex w-full text-sm my-1">
           <OrderPrice :currency-pair="currencyPair" @price="selectPrice" />
         </div>
-        <div class="inline-flex w-full text-sm my-1" v-show="isPriceShow">
+        <div v-else class="inline-flex w-full text-sm my-1">
           <div class="py-1 flex items-center justify-center w-full">
             <button class="px-1 mr-1 font-bold text-lg" @click="setMidPrice">
               <fa icon="refresh"></fa>
@@ -260,5 +281,10 @@ const marketOrder = async (orderSide: OrderSide, price: number) => {
 .no-count::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+/* 数値の入力欄にスピナーを常時表示する */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
 }
 </style>
