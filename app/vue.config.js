@@ -7,6 +7,9 @@ module.exports = defineConfig({
   configureWebpack: {
     watch: true,
     cache: true,
+    optimization: {
+      minimize: false,
+    },
     plugins: [
       new webpack.ProvidePlugin({
         Buffer: ["buffer", "Buffer"],
