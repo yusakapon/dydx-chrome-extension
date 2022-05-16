@@ -6,6 +6,7 @@ do
   if [ -d dist ] && [ -e dist/index.html ]; then
     cp src/manifest.json dist/
     cp src/loader.js dist/
+    cp -r src/assets/icon dist/
     rm dist/index.html
     echo "Finish adjust-dist"
     break
