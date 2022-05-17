@@ -18,49 +18,5 @@ Please read the description and agree to the disclaimer from this page before in
 [Chrome Web Store](https://chrome.google.com/webstore/detail/quick-dydx-dydx-trade-sup/kldmhofdidmbnpnceofdpdckmbdkimpc)
 
 ## :chart_with_upwards_trend:How to use?
-This extension is compatible with the dYdX testnet mainnet.  
-Testnet : `https://trade.stage.dydx.exchange`  
-Mainnet : `https://trade.dydx.exchange`  
-  
-:warning:It is recommended to check the operation on a testnet before using it on the mainnet.
 
-#### :memo:Connect & Disconnect
-
-
-##### TestNet
-
-##### MainNet
-
-#### :memo:Market Order
-
-##### Amount?
-
-##### Close?
-
-#### :memo:Limit Order
-
-##### Amount?
-
-##### Close?
-
-##### Auto Mode?
-
-##### PostOnly?
-
-##### Expiration?
-
-#### :memo:Check positions
-
-#### :memo:Check orders
-
-#### :memo:Update order
-
-#### :memo:Cancel order
-
-##### Cancel one order
-
-##### Cancel one currency orders
-
-##### Cancel all currency orders
-
-#### :memo:Change Currency
+→ [How to use?](https://github.com/yusakapon/dydx-chrome-extension/wiki/How-to-use%3F)
