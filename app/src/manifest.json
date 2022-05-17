@@ -7,7 +7,7 @@
     "48": "icon/icon48.png",
     "128": "icon/icon128.png"
   },
-  "version": "1.0",
+  "version": "1.01",
   "content_scripts": [
     {
       "matches": [
